@@ -4,92 +4,37 @@ import { useNavigate } from 'react-router-dom';
 const Header = ({ toggleSidebar }) => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    navigate('/login');
-  };
-
   return (
-    <header style={styles.header}>
-      <div style={styles.headerLeftHub}>
+    <header className="sticky top-0 z-[1000] flex h-[70px] w-full items-center justify-between border-b border-slate-200 bg-white px-6">
+      
+      <div className="flex items-center gap-4">
         <button 
-          className="mobile-only"
-          style={styles.headerMenuTrigger} 
           onClick={toggleSidebar} 
-          aria-label="Open Navigation Menu"
-        >☰</button>
-
-        <div style={styles.headerTitleBox}>
-          <h1 style={styles.headerMainTitle}>Dashboard</h1>
-          <nav className="desktop-only" style={styles.headerBreadcrumb}>
-            Home <span style={styles.breadcrumbSeparator}>/</span> 
-            <span style={styles.breadcrumbActive}>Dashboard</span>
+          className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-xl text-slate-600"
+        >
+          ☰
+        </button>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+          <nav className="hidden md:flex text-xs font-medium text-slate-500 gap-1">
+            Home <span className="text-slate-300">/</span> <span className="text-slate-600">Dashboard</span>
           </nav>
         </div>
       </div>
 
-      <div style={styles.headerRightHub}>
-        <div className="desktop-only" style={styles.utilityGroup}>
-          <button style={styles.headerUtilityBtn} aria-label="Notifications">
-            <div style={styles.badgeWrapper}>
-              <span style={styles.utilityIcon}>🔔</span>
-              <span style={styles.badgeDot}></span>
-            </div>
-          </button>
-          <button style={styles.headerUtilityBtn} aria-label="Messages">
-            <span style={styles.utilityIcon}>✉️</span>
-          </button>
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          <button className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-lg">🔔</button>
+          <button className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-lg">✉️</button>
         </div>
         
-        <div style={styles.avatarWrapper} onClick={handleLogout} title="Click to Logout">
-          <div style={styles.headerUserBadge}>RS</div>
-          <span style={styles.onlineIndicator}></span>
+        <div className="relative cursor-pointer" onClick={() => { localStorage.removeItem("isLoggedIn"); navigate('/login'); }}>
+          <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">RS</div>
+          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>
         </div>
       </div>
     </header>
   );
-};
-
-const styles = {
-  header: {
-    height: 'var(--header-height)', backgroundColor: '#ffffff', display: 'flex',
-    justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0',
-    padding: '0 20px', position: 'sticky', top: 0, zIndex: 90, width: '100%', boxSizing: 'border-box',
-  },
-  headerLeftHub: { display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0 },
-  headerMenuTrigger: {
-    background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px',
-    fontSize: '20px', cursor: 'pointer', color: '#334155', width: '40px', height: '40px',
-    display: 'none', alignItems: 'center', justifyContent: 'center',
-  },
-  headerTitleBox: { display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 },
-  headerMainTitle: { margin: 0, fontSize: '20px', color: 'var(--text-dark)', fontWeight: '700', letterSpacing: '-0.3px' },
-  headerBreadcrumb: { fontSize: '13px', color: 'var(--text-muted)', fontWeight: '500', display: 'flex', alignItems: 'center' },
-  breadcrumbSeparator: { color: '#cbd5e1', margin: '0 8px' },
-  breadcrumbActive: { color: '#475569' },
-  headerRightHub: { display: 'flex', alignItems: 'center', gap: '24px' },
-  utilityGroup: { display: 'flex', alignItems: 'center', gap: '12px' },
-  headerUtilityBtn: { 
-    background: '#f8fafc', border: '1px solid #f1f5f9', cursor: 'pointer', 
-    width: '40px', height: '40px', borderRadius: '10px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  utilityIcon: { fontSize: '18px' },
-  badgeWrapper: { position: 'relative' },
-  badgeDot: {
-    position: 'absolute', top: '-2px', right: '-2px', width: '6px', height: '6px',
-    backgroundColor: '#f43f5e', borderRadius: '50%', border: '1px solid #ffffff',
-  },
-  avatarWrapper: { position: 'relative', cursor: 'pointer' },
-  headerUserBadge: {
-    width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--primary-blue)',
-    color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontWeight: '700', fontSize: '14px',
-  },
-  onlineIndicator: {
-    position: 'absolute', bottom: '0', right: '0', width: '10px', height: '10px',
-    backgroundColor: '#10b981', borderRadius: '50%', border: '2px solid #ffffff',
-  }
 };
 
 export default memo(Header);

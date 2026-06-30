@@ -1,0 +1,27 @@
+/* 1. Tailwind's Core Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2. Global Resets or Base Overrides */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+/* 3. Custom Utilities (Like the scrollbar we discussed) */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-[6px] h-[6px];
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-slate-100 rounded-lg;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-lg transition-colors duration-200;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+}

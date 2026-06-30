@@ -10,99 +10,41 @@ const AppLayout = ({ children }) => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
     
-    let timeoutId;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(checkMobile, 100);
-    };
-
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeoutId);
-    };
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  useEffect(() => {
-    if (!isMobile && isMobileOpen) {
-      setIsMobileOpen(false);
-    }
-  }, [isMobile, isMobileOpen]);
 
   const toggleSidebar = useCallback(() => {
     setIsMobileOpen((prev) => !prev);
   }, []);
 
   return (
-    <div style={styles.layoutContainer}>
+    <div className="flex w-full min-h-screen bg-slate-50 relative overflow-x-hidden">
+  
       <Sidebar toggleMobileMenu={toggleSidebar} isOpen={isMobileOpen} />
 
       {isMobile && isMobileOpen && (
         <div 
           onClick={toggleSidebar} 
-          style={styles.mobileOverlay} 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[1040]"
         />
       )}
 
-      <div style={{
-        ...styles.rightViewport,
-        paddingLeft: isMobile ? '0' : 'var(--sidebar-width, 260px)',
-      }}>
+      <div 
+        className={`flex flex-col flex-1 w-full min-h-screen transition-all duration-300 ease-in-out ${
+          !isMobile ? 'ml-[260px]' : 'ml-0'
+        }`}
+      >
         <Header toggleSidebar={toggleSidebar} />
 
-        <main style={styles.contentArea}>
-          <div style={{
-            ...styles.pageContent,
-            padding: isMobile ? '16px' : '40px',
-            paddingTop: isMobile ? 'calc(var(--header-height, 70px) + 20px)' : '40px',
-          }}>
+        <main className="flex-1 w-full">
+          <div className={`w-full ${isMobile ? 'p-4' : 'p-10'}`}>
             {children}
           </div>
         </main>
       </div>
     </div>
   );
-};
-
-const styles = {
-  layoutContainer: {
-    display: 'flex',
-    width: '100%',
-    minHeight: '100vh',
-    backgroundColor: '#f8fafc',
-    position: 'relative',
-    contain: 'clean',
-  },
-  mobileOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    backdropFilter: 'blur(4px)',
-    WebkitBackdropFilter: 'blur(4px)',
-    zIndex: 1010,
-    willChange: 'opacity',
-  },
-  rightViewport: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    width: '100%',
-    minHeight: '100vh',
-    transition: 'padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxSizing: 'border-box',
-  },
-  contentArea: {
-    flex: 1,
-    width: '100%',
-    boxSizing: 'border-box',
-  },
-  pageContent: {
-    boxSizing: 'border-box',
-    width: '100%',
-  },
 };
 
 export default memo(AppLayout);

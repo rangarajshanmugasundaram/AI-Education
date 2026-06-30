@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from 'react';
-import AppLayout from '../layouts/AppLayout'; 
-import StatsCard from '../components/StatsCard';
-import MyCourses from '../components/MyCourses';
-import SkillAnalysis from '../components/SkillAnalysis';
+import AppLayout from "../../../layouts/AppLayout";
+import StatsCard from "../components/StatsCard";
+import MyCourses from "../components/MyCourses";
+import SkillAnalysis from "../components/SkillAnalysis";
 
 const statsData = [
   { title: "Total Enrolled Courses", count: 6, color: "#4e73df" },
@@ -30,9 +30,12 @@ const StudentDashboard = () => {
 
   return (
     <AppLayout>
-      <div style={styles.dashboardContainer}>
+      <div className="w-full p-2 md:p-4">
         
-        <section style={styles.statsSection} aria-label="Overview Statistics">
+        <section 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full min-h-[120px]" 
+          aria-label="Overview Statistics"
+        >
           {memoizedStats.map((item) => (
             <StatsCard 
               key={item.title} 
@@ -43,11 +46,14 @@ const StudentDashboard = () => {
           ))}
         </section>
 
-        <section style={styles.widgetsGrid} aria-label="Dashboard Widgets">
-          <div style={styles.widgetItem}>
+        <section 
+          className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start w-full" 
+          aria-label="Dashboard Widgets"
+        >
+          <div className="w-full min-h-[300px] overflow-hidden rounded-xl">
             <MyCourses courses={memoizedCourses} />
           </div>
-          <div style={styles.widgetItem}>
+          <div className="w-full min-h-[300px] overflow-hidden rounded-xl">
             <SkillAnalysis skills={memoizedSkills} />
           </div>
         </section>
@@ -55,36 +61,6 @@ const StudentDashboard = () => {
       </div>
     </AppLayout>
   );
-};
-
-const styles = {
-  dashboardContainer: {
-    width: '100%',
-    padding: '8px',
-    boxSizing: 'border-box',
-    contain: 'layout style',
-  },
-  statsSection: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-    gap: '24px', 
-    marginBottom: '32px',
-    width: '100%',
-    minHeight: '120px', 
-  },
-  widgetsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(280px, 100%, 480px), 1fr))',
-    gap: '32px', 
-    alignItems: 'start',
-    width: '100%',
-  },
-  widgetItem: {
-    width: '100%',
-    minHeight: '300px', 
-    borderRadius: '12px',
-    overflow: 'hidden',
-  }
 };
 
 export default memo(StudentDashboard);
