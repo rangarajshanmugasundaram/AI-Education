@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 
 const StatsCard = ({ title, count, color }) => {
   return (
@@ -14,7 +14,7 @@ const StatsCard = ({ title, count, color }) => {
       
       {color && (
         <div 
-          className="w-3 h-3 rounded-full ml-4 flex-shrink-0"
+          className="w-3 h-3 rounded-full ml-4 shrink-0"
           style={{ 
             backgroundColor: color,
             boxShadow: `0 0 12px ${color}40`

@@ -1,11 +1,12 @@
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 const Login = lazy(() => import('./modules/auth/pages/Login'));
 const Register = lazy(() => import('./modules/auth/pages/Register'));
 const ForgotPassword = lazy(() => import('./modules/auth/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./modules/auth/pages/ResetPassword'));
-const StudentDashboard = lazy(() => import('./modules/student/pages/StudentDashboard'));
+const TrainerDashboard = lazy(() => import('./modules/trainer/pages/TrainerDashboard'));
+const DigitalClassroom = lazy(() => import('./modules/trainer/pages/DigitalClassroom'));
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("isLoggedIn");
@@ -23,9 +24,16 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
+            {/* Main Application Authenticated Routes */}
             <Route path="/" element={
               <ProtectedRoute>
-                <StudentDashboard />
+                <TrainerDashboard />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/digital-classroom" element={
+              <ProtectedRoute>
+                <DigitalClassroom />
               </ProtectedRoute>
             } />
             

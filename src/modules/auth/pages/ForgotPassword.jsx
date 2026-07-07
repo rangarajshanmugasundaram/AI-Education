@@ -1,4 +1,3 @@
-import React from 'react';
 import ForgotPasswordCard from '../components/ForgotPasswordCard';
 
 const ForgotPassword = () => {

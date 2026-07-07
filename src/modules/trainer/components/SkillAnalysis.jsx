@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 
 const SkillAnalysis = ({ skills }) => {
   return (
@@ -24,7 +24,7 @@ const SkillAnalysis = ({ skills }) => {
               
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-blue-600 rounded-full transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${value}%` }}
                   role="progressbar"
                   aria-valuenow={value}
