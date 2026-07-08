@@ -7,6 +7,7 @@ const ForgotPassword = lazy(() => import('./modules/auth/pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./modules/auth/pages/ResetPassword'));
 const TrainerDashboard = lazy(() => import('./modules/trainer/pages/TrainerDashboard'));
 const DigitalClassroom = lazy(() => import('./modules/trainer/pages/DigitalClassroom'));
+const SessionRecordings = lazy(() => import('./modules/trainer/pages/SessionRecordings')); // <-- 🆕 Lazy load the new recordings page
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("isLoggedIn");
@@ -34,6 +35,13 @@ function App() {
             <Route path="/digital-classroom" element={
               <ProtectedRoute>
                 <DigitalClassroom />
+              </ProtectedRoute>
+            } />
+
+            {/* Session Recordings Route */}
+            <Route path="/session-recordings" element={ // <-- 🆕 Protected route for the recordings view
+              <ProtectedRoute>
+                <SessionRecordings />
               </ProtectedRoute>
             } />
             

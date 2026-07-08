@@ -33,9 +33,10 @@ export default function DigitalClassroom() {
             <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
               Whiteboard Development Sandbox
             </h2>
+            {/* Added min-h-0 here to ensure the container respects flex boundaries */}
             <div 
               style={{ height: 'calc(100vh - 220px)', minHeight: '580px' }} 
-              className="w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
+              className="w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-0" 
             >
               <MemoizedWhiteboard />
             </div>
@@ -48,7 +49,7 @@ export default function DigitalClassroom() {
             
             <div 
               style={{ height: 'calc(100vh - 220px)', minHeight: '580px' }} 
-              className="w-full bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-sm"
+              className="w-full bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-sm min-h-0"
             >
               <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
                 <h4 className="text-xs font-bold text-slate-800 tracking-wide uppercase">
@@ -61,9 +62,7 @@ export default function DigitalClassroom() {
               </div>
             </div>
           </aside>
-
         </div>
-
       </div>
     </AppLayout>
   );

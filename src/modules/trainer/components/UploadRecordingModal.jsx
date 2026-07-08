@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactDOM from 'react-dom';
 
 export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess }) {
   const [formData, setFormData] = useState({
@@ -58,26 +59,34 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/60 flex flex-col overflow-hidden animate-fade-in">
+  // Render the modal inside a Portal directly under document.body to block/blur layout headers
+  return ReactDOM.createPortal(
+    <div style={{ zIndex: 99999 }} className="fixed inset-0 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xl transition-all duration-300">
+      
+      {/* Premium White Floating Content Card */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-fade-in transform scale-100 transition-transform">
         
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+        {/* Modal Header Panel */}
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
             Upload Recording Session
           </h3>
           <button 
             type="button"
             onClick={onClose} 
-            className="text-slate-400 hover:text-slate-600 font-bold text-sm p-1 transition-colors"
+            className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200/80 p-2 rounded-full transition-all duration-200"
+            aria-label="Close modal"
           >
-            ✕
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
+        {/* Input Form Fields Workspace */}
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Select Session Link
             </label>
@@ -85,7 +94,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
               name="session"
               value={formData.session}
               onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl h-10 px-3 text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl h-11 sm:h-10 px-3 text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
             >
               <option value="">-- Choose an active session context --</option>
               <option value="Full-Stack Engineering Bootcamp">Full-Stack Engineering Bootcamp</option>
@@ -97,7 +106,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
             )}
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               Recording Title
             </label>
@@ -107,16 +116,16 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., State management via Whiteboard diagrams"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl h-10 px-3 text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl h-11 sm:h-10 px-3 text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
             />
             {errors.title && (
               <span className="text-[10px] font-semibold text-red-500 px-1">{errors.title}</span>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 Upload Video Field
               </label>
@@ -131,7 +140,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
               )}
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 Duration Input (hh:mm)
               </label>
@@ -141,7 +150,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
                 value={formData.duration}
                 onChange={handleChange}
                 placeholder="e.g., 01:45"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl h-10 px-3 text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl h-11 sm:h-10 px-3 text-xs sm:text-sm text-slate-700 outline-none focus:border-blue-500 focus:bg-white transition-all"
               />
               {errors.duration && (
                 <span className="text-[10px] font-semibold text-red-500 px-1">{errors.duration}</span>
@@ -150,6 +159,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
 
           </div>
 
+          {/* Action Control Hub */}
           <div className="flex justify-end gap-2 mt-2 pt-4 border-t border-slate-100">
             <button
               type="button"
@@ -160,7 +170,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
             </button>
             <button
               type="submit"
-              className="h-10 px-5 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wide hover:bg-blue-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+              className="h-10 px-5 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm shadow-blue-500/10"
             >
               Upload Session
             </button>
@@ -168,6 +178,7 @@ export default function UploadRecordingModal({ isOpen, onClose, onUploadSuccess 
 
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

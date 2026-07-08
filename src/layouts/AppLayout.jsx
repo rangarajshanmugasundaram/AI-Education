@@ -23,13 +23,6 @@ const AppLayout = ({ children }) => {
   
       <Sidebar toggleMobileMenu={toggleSidebar} isOpen={isMobileOpen} />
 
-      {isMobile && isMobileOpen && (
-        <div 
-          onClick={toggleSidebar} 
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[1040]"
-        />
-      )}
-
       <div 
         className={`flex flex-col flex-1 w-full min-h-screen transition-all duration-300 ease-in-out ${
           !isMobile ? 'ml-[260px]' : 'ml-0'

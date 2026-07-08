@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 
 const MOCK_BATCHES = [
   { id: 'b1', name: 'Full Stack JavaScript - Batch A' },
@@ -12,7 +13,6 @@ export default function CreateSessionModal({ isOpen, onClose, onCreateSession })
   const [sessionTime, setSessionTime] = useState('');
   const backdropRef = useRef(null);
 
-  // Safely handle closing on Escape press
   useEffect(() => {
     if (!isOpen) return;
     
@@ -25,7 +25,6 @@ export default function CreateSessionModal({ isOpen, onClose, onCreateSession })
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Clean form state reset logic when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedBatch('');
@@ -57,27 +56,30 @@ export default function CreateSessionModal({ isOpen, onClose, onCreateSession })
     });
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div 
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      style={{ zIndex: 99999 }}
+      className="fixed inset-0 bg-slate-950/40 backdrop-blur-xl flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-300"
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-md w-full max-h-[92vh] sm:max-h-none overflow-y-auto p-5 sm:p-6 border border-slate-100 transform transition-all flex flex-col">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full max-h-[92vh] sm:max-h-none overflow-y-auto p-5 sm:p-6 border border-slate-100 transform transition-all flex flex-col">
         
-        <div className="flex justify-between items-center border-b border-slate-100 pb-3.5 mb-5 shrink-0">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-5 shrink-0">
           <h3 className="text-base font-bold text-slate-900 tracking-tight">
             Schedule New Live Session
           </h3>
           <button 
             type="button"
             onClick={onClose} 
-            className="text-slate-400 hover:text-slate-600 text-2xl h-11 w-11 -mr-2 leading-none transition-colors flex items-center justify-center"
+            className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors flex items-center justify-center"
             aria-label="Close modal"
           >
-            ×
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -134,6 +136,7 @@ export default function CreateSessionModal({ isOpen, onClose, onCreateSession })
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
