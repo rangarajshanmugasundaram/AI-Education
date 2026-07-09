@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Header = ({ toggleSidebar }) => {
@@ -7,7 +7,7 @@ const Header = ({ toggleSidebar }) => {
   return (
     <header 
       style={{ zIndex: 1000 }}
-      className="sticky top-0 flex h-[70px] w-full items-center justify-between border-b border-blue-100 bg-[#F0F9FF] px-6 transition-colors duration-200"
+      className="sticky top-0 flex h-17.5 w-full items-center justify-between border-b border-blue-100 bg-[#F0F9FF] px-6 transition-colors duration-200"
     >
       
       {/* Left Block: Mobile Menu Button & Screen Title */}

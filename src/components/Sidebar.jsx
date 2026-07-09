@@ -13,8 +13,8 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   return (
     <>
       {/* NON-BLUR MOBILE BACKDROP:
-        Only darkens the background slightly. Removed 'backdrop-blur' 
-        to ensure no blur is applied to the main content.
+         Only darkens the background slightly. Removed 'backdrop-blur' 
+         to ensure no blur is applied to the main content.
       */}
       {isOpen && (
         <div
@@ -23,7 +23,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
         />
       )}
 
-      {/* Sidebar - Now strictly defined for mobile */}
+      {/* Sidebar - Strictly defined for mobile & desktop layouts */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-[#E0F2FE] z-50 transform transition-transform duration-300 ease-in-out md:translate-x-0 border-r border-blue-200/50 flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -48,6 +48,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
             { path: '/', label: 'Dashboard', icon: '📊' },
             { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
             { path: '/session-recordings', label: 'Session Recordings', icon: '📹' },
+            { path: '/session-management', label: 'Session Management', icon: '⚙️' },
           ].map((item) => (
             <button
               key={item.path}

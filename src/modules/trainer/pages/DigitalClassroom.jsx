@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import AppLayout from "../../../layouts/AppLayout"; 
 import WhiteboardZone from '../components/WhiteboardZone';
 import ClassroomChat from '../components/ClassroomChat';
 
@@ -8,9 +7,10 @@ const MemoizedChat = memo(ClassroomChat);
 
 export default function DigitalClassroom() {
   return (
-    <AppLayout>
-      <div className="w-full flex flex-col gap-6 max-w-[1600px] mx-auto p-4">
+    <>
+      <div className="w-full flex flex-col gap-6 max-w-[1600px] mx-auto">
         
+        {/* Workspace Header Panel */}
         <header className="w-full bg-white border border-slate-200/80 rounded-2xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
           <div>
             <h1 className="text-base font-bold text-slate-900 tracking-tight">
@@ -27,13 +27,14 @@ export default function DigitalClassroom() {
           </div>
         </header>
 
+        {/* Dynamic Sandbox Layout */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
           
+          {/* Main Canvas Workspace Area */}
           <main className="w-full lg:col-span-3 flex flex-col gap-3">
             <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
               Whiteboard Development Sandbox
             </h2>
-            {/* Added min-h-0 here to ensure the container respects flex boundaries */}
             <div 
               style={{ height: 'calc(100vh - 220px)', minHeight: '580px' }} 
               className="w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-0" 
@@ -42,6 +43,7 @@ export default function DigitalClassroom() {
             </div>
           </main>
 
+          {/* Engagement Sidebar Panel */}
           <aside className="w-full lg:col-span-1 flex flex-col gap-3 lg:sticky lg:top-6">
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
               Classroom Engagement
@@ -64,6 +66,6 @@ export default function DigitalClassroom() {
           </aside>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

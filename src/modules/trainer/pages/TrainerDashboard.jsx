@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import AppLayout from "../../../layouts/AppLayout"; 
 import CreateSessionModal from '../components/CreateSessionModal';
 import UploadRecordingModal from '../components/UploadRecordingModal'; 
 
@@ -70,9 +69,10 @@ export default function TrainerDashboard() {
   };
 
   return (
-    <AppLayout>
-      <div className="w-full flex flex-col gap-5 sm:gap-6 max-w-[1600px] mx-auto p-3 sm:p-4 lg:p-6 bg-slate-50/30 min-h-screen">
+    <>
+      <div className="w-full flex flex-col gap-5 sm:gap-6 max-w-[1600px] mx-auto bg-slate-50/30 min-h-screen">
         
+        {/* Hub Header Block */}
         <header className="w-full bg-white/95 backdrop-blur-sm border border-slate-200/80 rounded-2xl p-4 sm:p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm sticky top-0 z-40 transition-all">
           <div className="space-y-1 text-center sm:text-left">
             <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
@@ -101,10 +101,13 @@ export default function TrainerDashboard() {
           </div>
         </header>
 
+        {/* Dashboard Panels Layout */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
+          {/* Main Informational Flow Columns */}
           <main className="w-full lg:col-span-3 flex flex-col gap-6 order-1">
             
+            {/* Live Lecture Segments */}
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
                 Scheduled & Active Lectures
@@ -153,6 +156,7 @@ export default function TrainerDashboard() {
               </div>
             </section>
 
+            {/* Smart Lesson Notes & Summary Aggregates */}
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
                 Stored Session Notes & AI Insights
@@ -187,6 +191,7 @@ export default function TrainerDashboard() {
               </div>
             </section>
 
+            {/* Local Video Repository Blocks */}
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
                 Classroom Recordings Repository ({recordings.length})
@@ -227,6 +232,7 @@ export default function TrainerDashboard() {
 
           </main>
 
+          {/* Metric Dashboard Sidebar Column */}
           <aside className="w-full lg:col-span-1 flex flex-col gap-3 lg:sticky lg:top-28 order-2">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
               Classroom Performance
@@ -259,6 +265,7 @@ export default function TrainerDashboard() {
 
       </div>
 
+      {/* Portal Trigger Control Modals */}
       <CreateSessionModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -270,6 +277,6 @@ export default function TrainerDashboard() {
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={handleAddRecording}
       />
-    </AppLayout>
+    </>
   );
 }
