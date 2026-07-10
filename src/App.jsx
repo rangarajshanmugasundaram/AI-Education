@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import AppLayout from './layouts/AppLayout'; // <-- Import your layout component
+import ProtectedRoute from './layouts/ProtectedRoute';
 
 const Login = lazy(() => import('./modules/auth/pages/Login'));
 const Register = lazy(() => import('./modules/auth/pages/Register'));
@@ -11,46 +11,37 @@ const DigitalClassroom = lazy(() => import('./modules/trainer/pages/DigitalClass
 const SessionRecordings = lazy(() => import('./modules/trainer/pages/SessionRecordings')); 
 const SessionManagement = lazy(() => import('./modules/trainer/pages/SessionManagement')); 
 
-const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("isLoggedIn");
-  
-  // Wrap all authenticated components automatically within the AppLayout
-  return isAuthenticated ? <AppLayout>{children}</AppLayout> : <Navigate to="/login" />;
-};
-
 function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen w-full bg-slate-50">
         <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium">Loading...</div>}>
           <Routes>
-            {/* Guest Authentication Routes (No Sidebar or Header) */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Authenticated Workspace Routes (Wrapped with Sidebar & Header) */}
             <Route path="/" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
                 <TrainerDashboard />
               </ProtectedRoute>
             } />
 
             <Route path="/digital-classroom" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['Student', 'Teacher', 'Trainer', 'Admin']}>
                 <DigitalClassroom />
               </ProtectedRoute>
             } />
 
             <Route path="/session-recordings" element={ 
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
                 <SessionRecordings />
               </ProtectedRoute>
             } />
 
             <Route path="/session-management" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
                 <SessionManagement />
               </ProtectedRoute>
             } />

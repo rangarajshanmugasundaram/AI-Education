@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import illustration from '@/assets/login/illustration.png';
 
 const AuthLayout = ({ children }) => (

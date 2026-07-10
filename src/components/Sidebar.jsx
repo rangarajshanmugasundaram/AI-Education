@@ -12,10 +12,6 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
 
   return (
     <>
-      {/* NON-BLUR MOBILE BACKDROP:
-         Only darkens the background slightly. Removed 'backdrop-blur' 
-         to ensure no blur is applied to the main content.
-      */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/20 md:hidden transition-opacity"
@@ -30,7 +26,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
         }`}
       >
         {/* Brand Header */}
-        <div className="flex h-[70px] items-center justify-between px-5 border-b border-blue-200/50 shrink-0 bg-[#F0F9FF]">
+        <div style={{ height: '70px' }} className="flex items-center justify-between px-5 border-b border-blue-200/50 shrink-0 bg-[#F0F9FF]">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-black text-white">AI</div>
             <span className="text-sm font-bold text-blue-950">AI Education</span>

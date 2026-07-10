@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ResetPasswordCard = () => {
@@ -17,7 +17,7 @@ const ResetPasswordCard = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-[420px] p-8 bg-white/95 rounded-3xl border border-slate-100 shadow-xl flex flex-col gap-6">
+    <form onSubmit={handleSubmit} style={{ maxWidth: '420px' }} className="w-full p-8 bg-white/95 rounded-3xl border border-slate-100 shadow-xl flex flex-col gap-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-slate-900">Set New Password</h2>
       </div>

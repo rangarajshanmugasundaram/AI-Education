@@ -1,5 +1,4 @@
-import React from 'react';
-import AuthLayout from '@/layouts/AuthLayout'; // Using your alias
+import AuthLayout from '@/layouts/AuthLayout';
 import LoginCard from '../components/LoginCard';
 
 const Login = () => {

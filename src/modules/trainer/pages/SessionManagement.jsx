@@ -182,7 +182,7 @@ const SessionManagement = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-slate-950/50 backdrop-blur-xl flex items-center justify-center p-4 transition-all duration-300">
+        <div style={{ zIndex: 2000 }} className="fixed inset-0 bg-slate-950/50 backdrop-blur-xl flex items-center justify-center p-4 transition-all duration-300">
           
           {/* Premium White Floating Content Card */}
           <div className="bg-white text-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col transform scale-100 transition-transform">
