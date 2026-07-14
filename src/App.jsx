@@ -10,6 +10,7 @@ const TrainerDashboard = lazy(() => import('./modules/trainer/pages/TrainerDashb
 const DigitalClassroom = lazy(() => import('./modules/trainer/pages/DigitalClassroom'));
 const SessionRecordings = lazy(() => import('./modules/trainer/pages/SessionRecordings')); 
 const SessionManagement = lazy(() => import('./modules/trainer/pages/SessionManagement')); 
+const AttendanceDashboard = lazy(() => import('./modules/attendance/pages/AttendanceDashboard'));
 
 function App() {
   return (
@@ -33,6 +34,11 @@ function App() {
                 <DigitalClassroom />
               </ProtectedRoute>
             } />
+            <Route path="/attendance" element={
+  <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
+    <AttendanceDashboard />
+  </ProtectedRoute>
+} />
 
             <Route path="/session-recordings" element={ 
               <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>

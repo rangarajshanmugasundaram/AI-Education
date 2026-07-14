@@ -1,4 +1,3 @@
-import React from 'react';
 import ResetPasswordCard from '../components/ResetPasswordCard';
 
 const ResetPassword = () => {

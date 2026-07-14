@@ -43,6 +43,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
           {[
             { path: '/', label: 'Dashboard', icon: '📊' },
             { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
+            { path: '/attendance', label: 'Attendance', icon: '📋' }, // <-- Added the new Attendance route link
             { path: '/session-recordings', label: 'Session Recordings', icon: '📹' },
             { path: '/session-management', label: 'Session Management', icon: '⚙️' },
           ].map((item) => (
@@ -51,7 +52,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
               onClick={() => handleNavigation(item.path)}
               className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold transition-all ${
                 location.pathname === item.path 
-                  ? 'bg-blue-600 text-white' 
+                  ? 'bg-blue-600 text-white shadow-sm' 
                   : 'text-blue-700 hover:bg-blue-200/60'
               }`}
             >
