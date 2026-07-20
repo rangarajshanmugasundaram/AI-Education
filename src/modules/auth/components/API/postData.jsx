@@ -2,7 +2,7 @@ import axiosInstance from '../auth/axiosSetup';
 
 export const postData = async (endpoint, data) => {
   const token = localStorage.getItem('token') || 'mock-jwt-token-from-backend-xyz123';
-  const email = localStorage.getItem('user_email') || 'trainertest@gmail.com'; // Use a valid DB email here
+  const email = localStorage.getItem('user_email') || 'trainer1@gmail.com'; // Use a valid DB email here
 
   const headers = {
     'Authorization': `Bearer ${token}`,

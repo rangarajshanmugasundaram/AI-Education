@@ -1,125 +1,123 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { getData } from '../../auth/components/API/getData';
+import { postData } from '../../auth/components/API/postData';
+import { deleteData } from '../../auth/components/API/deleteData';
 
-const TOOLS = { PEN: 'pen', ERASER: 'eraser', TEXT: 'text' };
+const TOOLS = { PEN: 'pen', ERASER: 'eraser', RECT: 'rect', CIRCLE: 'circle', TEXT: 'text' };
 
-export default function WhiteboardCollaborationHub() {
+export default function WhiteboardCollaborationHub({ sessionId = 'session_101' }) {
   const [tool, setTool] = useState(TOOLS.PEN);
   const [color, setColor] = useState('#0f172a');
   const [size, setSize] = useState(4);
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const isDrawing = useRef(false);
+  const startPos = useRef({ x: 0, y: 0 });
+  const currentPath = useRef([]); // Tracks points for pen/eraser
 
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctxRef.current = ctx;
-  }, []);
+    ctxRef.current = canvas.getContext('2d');
+    ctxRef.current.lineCap = 'round';
+    ctxRef.current.lineJoin = 'round';
+    loadCanvasData();
+  }, [sessionId]);
 
-  const startDrawing = useCallback((e) => {
-    isDrawing.current = true;
+  const loadCanvasData = async () => {
+    const drawings = await getData(`/api/whiteboard/${sessionId}/`);
+    const ctx = ctxRef.current;
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    drawings.forEach(d => drawItem(d));
+  };
+
+  const drawItem = (d) => {
+    const ctx = ctxRef.current;
+    const { data, type, color, width } = { data: d.drawing_data, type: d.tool_type, color: d.color, width: d.stroke_width };
+    
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.globalCompositeOperation = type === 'eraser' ? 'destination-out' : 'source-over';
+
+    if (type === 'text') {
+      ctx.font = '20px sans-serif';
+      ctx.fillText(data.text, data.x, data.y);
+    } else if (type === 'rect') {
+      ctx.strokeRect(data.x, data.y, data.w, data.h);
+    } else if (type === 'circle') {
+      ctx.beginPath();
+      ctx.arc(data.x, data.y, data.r, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (data.path && data.path.length > 0) {
+      ctx.beginPath();
+      ctx.moveTo(data.path[0].x, data.path[0].y);
+      data.path.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  const startDrawing = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
+    startPos.current = { x: offsetX, y: offsetY };
+    currentPath.current = [{ x: offsetX, y: offsetY }];
     
     if (tool === TOOLS.TEXT) {
-      const text = prompt("Enter your text:");
+      const text = prompt("Enter text:");
       if (text) {
-        ctxRef.current.fillStyle = color;
-        ctxRef.current.font = "20px sans-serif";
-        ctxRef.current.fillText(text, offsetX, offsetY);
+        postData('/api/whiteboard/save/', { session_id: sessionId, drawing_data: { text, x: offsetX, y: offsetY }, tool_type: 'text', color, stroke_width: size })
+        .then(loadCanvasData);
       }
-      isDrawing.current = false;
       return;
     }
+    isDrawing.current = true;
+  };
 
-    ctxRef.current.beginPath();
-    ctxRef.current.moveTo(offsetX, offsetY);
-  }, [tool, color]);
-
-  const draw = useCallback((e) => {
-    if (!isDrawing.current || tool === TOOLS.TEXT) return;
+  const draw = (e) => {
+    if (!isDrawing.current) return;
     const { offsetX, offsetY } = e.nativeEvent;
     
-    ctxRef.current.globalCompositeOperation = tool === TOOLS.ERASER ? 'destination-out' : 'source-over';
-    ctxRef.current.strokeStyle = color;
-    ctxRef.current.lineWidth = tool === TOOLS.ERASER ? size * 5 : size;
-    
-    ctxRef.current.lineTo(offsetX, offsetY);
-    ctxRef.current.stroke();
-  }, [tool, color, size]);
+    // Preview for Pen/Eraser
+    if (tool === TOOLS.PEN || tool === TOOLS.ERASER) {
+      ctxRef.current.globalCompositeOperation = tool === TOOLS.ERASER ? 'destination-out' : 'source-over';
+      ctxRef.current.strokeStyle = color;
+      ctxRef.current.lineWidth = size;
+      ctxRef.current.beginPath();
+      ctxRef.current.moveTo(currentPath.current[currentPath.current.length - 1].x, currentPath.current[currentPath.current.length - 1].y);
+      ctxRef.current.lineTo(offsetX, offsetY);
+      ctxRef.current.stroke();
+      currentPath.current.push({ x: offsetX, y: offsetY });
+    }
+  };
 
-  const stopDrawing = useCallback(() => {
+  const stopDrawing = async (e) => {
+    if (!isDrawing.current) return;
     isDrawing.current = false;
-    ctxRef.current?.closePath();
-  }, []);
+    const { offsetX, offsetY } = e.nativeEvent;
+    
+    let drawing_data;
+    if (tool === TOOLS.RECT) drawing_data = { x: startPos.current.x, y: startPos.current.y, w: offsetX - startPos.current.x, h: offsetY - startPos.current.y };
+    else if (tool === TOOLS.CIRCLE) drawing_data = { x: startPos.current.x, y: startPos.current.y, r: Math.abs(offsetX - startPos.current.x) };
+    else drawing_data = { path: currentPath.current };
 
-  const clearCanvas = useCallback(() => {
-    ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-  }, []);
+    await postData('/api/whiteboard/save/', { session_id: sessionId, drawing_data, tool_type: tool, color, stroke_width: size });
+    loadCanvasData();
+  };
 
   return (
-    <div className="wb-container">
-      <header className="wb-header">
-        <div className="wb-brand">
-          <span className="live-pill">LIVE WORKSPACE</span>
-          <span className="title">Whiteboard Collaboration Hub</span>
-        </div>
-        <button className="clear-btn" onClick={clearCanvas}>🗑️ Clear All</button>
-      </header>
-
-      <div className="wb-canvas-area">
-        <div className="floating-toolbar">
-          <div className="tool-group">
-            {Object.values(TOOLS).map((t) => (
-              <button key={t} className={tool === t ? 'active' : ''} onClick={() => setTool(t)}>
-                {t.toUpperCase()}
-              </button>
-            ))}
-          </div>
-          
-          <div className="swatch-group">
-            {['#0f172a', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b'].map((c) => (
-              <button key={c} className={`swatch ${color === c ? 'active' : ''}`} style={{ backgroundColor: c }} onClick={() => setColor(c)} />
-            ))}
-          </div>
-
-          <div className="size-group">
-            <span>Size:</span>
-            <input type="range" min="2" max="20" value={size} onChange={(e) => setSize(Number(e.target.value))} />
-          </div>
-        </div>
-
-        <canvas 
-          ref={canvasRef} 
-          className="main-canvas"
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-        />
+    <div className="flex flex-col h-screen bg-gray-50 p-4">
+      <div className="flex gap-2 mb-4 bg-white p-2 rounded shadow">
+        {Object.values(TOOLS).map(t => (
+          <button key={t} className={`px-4 py-1 rounded capitalize ${tool === t ? 'bg-black text-white' : 'bg-gray-200'}`} onClick={() => setTool(t)}>
+            {t}
+          </button>
+        ))}
+        <button className="bg-red-500 text-white px-4 rounded" onClick={async () => { await deleteData(`/api/whiteboard/${sessionId}/`); loadCanvasData(); }}>CLEAR</button>
       </div>
-
-      <style>{`
-        .wb-container { display: flex; flex-direction: column; height: 100vh; background: #f8fafc; font-family: system-ui, sans-serif; }
-        .wb-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #fff; border-bottom: 1px solid #e2e8f0; }
-        .wb-brand { display: flex; align-items: center; gap: 10px; }
-        .live-pill { background: #22c55e; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
-        .title { font-size: 13px; font-weight: 700; color: #0f172a; }
-        .clear-btn { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
-        .wb-canvas-area { flex: 1; position: relative; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; cursor: crosshair; }
-        .floating-toolbar { position: absolute; top: 15px; right: 20px; display: flex; align-items: center; gap: 12px; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; }
-        .tool-group { display: flex; gap: 4px; }
-        .tool-group button { border: none; background: #f1f5f9; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; color: #64748b; cursor: pointer; }
-        .tool-group button.active { background: #0f172a; color: #fff; }
-        .swatch-group { display: flex; gap: 6px; }
-        .swatch { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
-        .swatch.active { border-color: #3b82f6; }
-        .size-group { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #64748b; }
-        .main-canvas { width: 100%; height: 100%; display: block; }
-      `}</style>
+      <canvas ref={canvasRef} className="flex-1 bg-white border shadow-inner cursor-crosshair" onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} />
     </div>
   );
 }

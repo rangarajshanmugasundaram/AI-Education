@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AttendanceStatsCard from '../components/AttendanceStatsCard';
 import AttendanceFilters from '../components/AttendanceFilters';
 import AttendanceTable from '../components/AttendanceTable';
@@ -7,39 +7,132 @@ import AttendanceDetailsModal from '../components/AttendanceDetailsModal';
 import { getData } from '../../auth/components/API/getData';
 import { putData } from '../../auth/components/API/putData';
 
+// 🌟 OPTIMIZATION 1: Highly optimized sub-render tree node using CSS contain parameters
+const MemoizedDurationValue = React.memo(({ value }) => {
+  return (
+    <div style={{ minWidth: '100px' }} className="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-right contain-paint">
+      <span className="text-lg font-black text-blue-600 font-mono">
+        {value}
+      </span>
+    </div>
+  );
+});
+MemoizedDurationValue.displayName = 'MemoizedDurationValue';
+
 export default function AttendanceDashboard() {
   const [records, setRecords] = useState([]);
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState(['Session-A', 'Session-B']);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  
+  // Initialize with standard server-side viewport dimensions to prevent immediate layout shift on mount
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  const [reportMetrics, setReportMetrics] = useState({
+    totalStudents: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    attendanceRate: '0%',
+    averageDuration: '0 mins'
+  });
+
   const [filters, setFilters] = useState({
     searchQuery: '',
-    session: '',
+    session: 'all', 
     status: '',
     date: ''
   });
 
+  const containerRef = useRef(null);
+
+  // 🌟 OPTIMIZATION 2: Replaced heavy 'resize' event listener with a highly-performant passive ResizeObserver
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.ResizeObserver) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width || window.innerWidth;
+        setIsMobile(width < 768);
+      }
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const fetchAttendanceReport = useCallback(async (sessionId) => {
+    try {
+      const reportResponse = await getData(`/api/attendance/report/${sessionId}`);
+      if (reportResponse && reportResponse.metrics) {
+        setReportMetrics({
+          totalStudents: reportResponse.metrics.total_students_logged || 0,
+          present: reportResponse.metrics.presence_count || 0,
+          absent: reportResponse.metrics.absence_count || 0,
+          late: reportResponse.metrics.lateness_count || 0,
+          attendanceRate: reportResponse.metrics.attendance_percentage || '0%',
+          averageDuration: reportResponse.duration_report?.average_duration_minutes || '0 mins'
+        });
+      }
+    } catch (err) {
+      console.error("Analytical report fetch latency:", err);
+    }
+  }, []);
+
+  // 🌟 OPTIMIZATION 3: Grouped API response sets to minimize layout thrashing paint runs
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getData('/api/attendance/session/Session-A');
+      const targetSession = filters.session || 'all';
+      
+      // Fetch both details in parallel instead of sequentially waiting
+      const [response, reportResponse] = await Promise.all([
+        getData(`/api/attendance/session/${targetSession}`),
+        getData(`/api/attendance/report/${targetSession}`)
+      ]);
+
       const fetchedRecords = response?.records || [];
+      
+      // Update data states concurrently
       setRecords(fetchedRecords);
-      const uniqueSessions = [...new Set(fetchedRecords.map(r => r.session_id))].filter(Boolean);
-      setSessions(uniqueSessions);
+
+      const fetchedUnique = [...new Set(fetchedRecords.map(r => r.session_id))].filter(Boolean);
+      if (fetchedUnique.length > 0) {
+        setSessions(prev => [...new Set([...prev, ...fetchedUnique])]);
+      }
+
+      if (reportResponse && reportResponse.metrics) {
+        setReportMetrics({
+          totalStudents: reportResponse.metrics.total_students_logged || 0,
+          present: reportResponse.metrics.presence_count || 0,
+          absent: reportResponse.metrics.absence_count || 0,
+          late: reportResponse.metrics.lateness_count || 0,
+          attendanceRate: reportResponse.metrics.attendance_percentage || '0%',
+          averageDuration: reportResponse.duration_report?.average_duration_minutes || '0 mins'
+        });
+      }
+
     } catch (err) {
-      console.error("API Error:", err);
+      console.error("API Connection Error:", err);
       setError("Unable to load data. Please check your backend connection.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters.session]);
 
   useEffect(() => {
     fetchAttendance();
-  }, [fetchAttendance]);
+  }, [filters.session, fetchAttendance]);
 
   const handleUpdateStatus = async (userId, sessionId, newStatus) => {
     try {
@@ -48,84 +141,177 @@ export default function AttendanceDashboard() {
         session_id: sessionId,
         status: newStatus
       });
+      
       setRecords(prev => prev.map(rec => 
         (rec.user_id === userId && rec.session_id === sessionId) ? { ...rec, status: newStatus } : rec
       ));
+      
+      fetchAttendanceReport(filters.session || 'all');
       setSelectedRecord(null);
     } catch (err) {
       alert(`Backend modification failed: ${err?.message}`);
     }
   };
 
-  const filteredRecords = records.filter(rec => {
-    const studentIdentifier = rec.student_name || rec.user_id || '';
-    return studentIdentifier.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
-           (filters.session ? rec.session_id === filters.session : true) &&
-           (filters.status ? rec.status === filters.status : true) &&
-           (filters.date && rec.join_time ? rec.join_time.startsWith(filters.date) : true);
-  });
+  // 🌟 CORRECT ORDER: Memoize filtered calculations defined FIRST before usage in handlers
+  const filteredRecords = useMemo(() => {
+    const query = (filters.searchQuery || '').toLowerCase().trim();
+    return records.filter(rec => {
+      const studentIdentifier = rec.student_name || rec.user_id || '';
+      const matchesSearch = studentIdentifier.toLowerCase().includes(query);
+      const matchesStatus = filters.status ? rec.status === filters.status : true;
+      const matchesDate = filters.date && rec.join_time ? rec.join_time.startsWith(filters.date) : true;
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [records, filters.searchQuery, filters.status, filters.date]);
 
-  const totalCount = filteredRecords.length;
-  const presentCount = filteredRecords.filter(r => r.status === 'Present').length;
-  const absentCount = filteredRecords.filter(r => r.status === 'Absent').length;
-  const lateCount = filteredRecords.filter(r => r.status === 'Late').length;
-  const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 0;
+  const handleExportCSV = () => {
+    if (filteredRecords.length === 0) {
+      alert("No matched logs found to export.");
+      return;
+    }
+
+    const headers = ["Student Name", "User ID", "Session ID", "Join Time", "Leave Time", "Duration", "Status"];
+    const rows = filteredRecords.map(rec => [
+      `"${rec.student_name || 'Unknown'}"`,
+      `"${rec.user_id}"`,
+      `"${rec.session_id}"`,
+      `"${rec.join_time || '--'}"`,
+      `"${rec.leave_time || '--'}"`,
+      `"${rec.duration || '0 mins'}"`,
+      `"${rec.status}"`
+    ]);
+
+    const metadata = [
+      ["Attendance Summary Report"],
+      ["Target Scope", filters.session === 'all' ? 'All Sessions' : filters.session],
+      ["Total Logged", reportMetrics.totalStudents],
+      ["Present Count", reportMetrics.present],
+      ["Absent Count", reportMetrics.absent],
+      ["Late Count", reportMetrics.late],
+      ["Attendance Rate", reportMetrics.attendanceRate],
+      ["Average Session Stay", reportMetrics.averageDuration],
+      [],
+      headers
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + [...metadata, ...rows].map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Attendance_Report_${filters.session}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Container that applies the blur when a record is selected */}
-      <div className={`p-6 max-w-7xl mx-auto bg-gray-50/30 transition-all duration-300 ${selectedRecord ? 'blur-sm pointer-events-none' : ''}`}>
+    <div ref={containerRef} className="relative min-h-screen bg-gray-50/30 contain-intrinsic-size">
+      <div className={`p-6 max-w-7xl mx-auto transition-all duration-200 ${selectedRecord ? 'blur-sm pointer-events-none' : ''}`}>
         
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Classroom Attendance</h1>
-          <button 
-            onClick={fetchAttendance}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold"
-          >
-            Refresh Logs
-          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Classroom Attendance</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Real-time analytical metrics compiled by the backend framework.</p>
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={handleExportCSV}
+              disabled={loading || filteredRecords.length === 0}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm"
+            >
+              📥 Export Report (.CSV)
+            </button>
+            <button 
+              onClick={fetchAttendance}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
+            >
+              Refresh Logs
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <AttendanceStatsCard title="Total Students" value={totalCount} icon="👥" color="blue" />
-          <AttendanceStatsCard title="Present" value={presentCount} icon="✅" color="green" />
-          <AttendanceStatsCard title="Absent" value={absentCount} icon="❌" color="red" />
-          <AttendanceStatsCard title="Attendance Rate" value={`${attendanceRate}%`} icon="📊" color="purple" />
+        {/* Stats Row */}
+        <div style={{ minHeight: '110px' }} className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6 ">
+          <AttendanceStatsCard 
+            title={filters.session === 'all' ? "Total Logs" : "Total Students"} 
+            value={reportMetrics.totalStudents} 
+            icon="👥" 
+            color="blue" 
+          />
+          <AttendanceStatsCard 
+            title={filters.session === 'all' ? "Present Instances" : "Present"} 
+            value={reportMetrics.present} 
+            icon="✅" 
+            color="green" 
+          />
+          <AttendanceStatsCard 
+            title={filters.session === 'all' ? "Absent Instances" : "Absent"} 
+            value={reportMetrics.absent} 
+            icon="❌" 
+            color="red" 
+          />
+          <AttendanceStatsCard 
+            title={filters.session === 'all' ? "Late Instances" : "Late"} 
+            value={reportMetrics.late} 
+            icon="🕒" 
+            color="amber" 
+          />
+          <AttendanceStatsCard 
+            title="Attendance Rate" 
+            value={reportMetrics.attendanceRate} 
+            icon="📊" 
+            color="purple" 
+          />
+        </div>
+
+        {/* Stable Height Stay Duration Banner */}
+        <div style={{ minHeight: '78px' }} className={`bg-white border border-gray-100 shadow-sm rounded-2xl p-4 mb-6 flex items-center justify-between transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+          <div className="flex items-center gap-3">
+            <span className="text-xl">⏱️</span>
+            <div>
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Average Class Stay Duration</h4>
+              <p className="text-sm font-black text-gray-800 mt-0.5">Calculated tracking weight per attendee.</p>
+            </div>
+          </div>
+          
+          <MemoizedDurationValue value={loading ? "-- mins" : reportMetrics.averageDuration} />
         </div>
 
         <AttendanceFilters filters={filters} setFilters={setFilters} sessions={sessions} />
 
-        {loading ? (
-          <div className="text-center py-24">Loading attendance data...</div>
-        ) : error ? (
-          <div className="p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>
-        ) : (
-          <>
-            <div className="hidden md:block">
-              <AttendanceTable 
-                records={filteredRecords} 
-                onViewDetails={setSelectedRecord}
-                onEditStatus={(rec) => setSelectedRecord(rec)}
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:hidden">
-              {filteredRecords.length > 0 ? (
-                filteredRecords.map((rec, index) => (
-                  <AttendanceCard key={index} record={rec} onViewDetails={setSelectedRecord} />
-                ))
+        <div style={{ minHeight: '300px' }} className="mt-6">
+          {loading ? (
+            <div className="text-center py-24 text-gray-400 font-medium">Loading attendance data...</div>
+          ) : error ? (
+            <div className="p-4 bg-red-50 text-red-700 rounded-lg shadow-sm">{error}</div>
+          ) : (
+            /* Viewport Conditional Render */
+            <>
+              {!isMobile ? (
+                <AttendanceTable 
+                  records={filteredRecords} 
+                  onViewDetails={setSelectedRecord}
+                  onEditStatus={setSelectedRecord}
+                />
               ) : (
-                <div className="text-center py-12 text-gray-400">No records found.</div>
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredRecords.length > 0 ? (
+                    filteredRecords.map((rec) => (
+                      <AttendanceCard key={`${rec.user_id}-${rec.session_id}`} record={rec} onViewDetails={setSelectedRecord} />
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">No records found.</div>
+                  )}
+                </div>
               )}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Modal is outside the blurred container so it remains sharp */}
       {selectedRecord && (
-        <div 
-        style={{ zIndex: 1000 }}
-        className="fixed inset-0 flex items-center justify-center p-4">
+        <div style={{ zIndex: 1000 }} className="fixed inset-0 flex items-center justify-center p-4 bg-black/25 backdrop-blur-xs">
           <AttendanceDetailsModal 
             record={selectedRecord}
             onClose={() => setSelectedRecord(null)}

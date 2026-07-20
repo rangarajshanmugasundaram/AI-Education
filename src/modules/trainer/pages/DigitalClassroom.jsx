@@ -6,6 +6,9 @@ const MemoizedWhiteboard = memo(WhiteboardZone);
 const MemoizedChat = memo(ClassroomChat);
 
 export default function DigitalClassroom() {
+  // Define your session ID here (this could also come from a URL parameter or context)
+  const ACTIVE_SESSION_ID = "session_101";
+
   return (
     <>
       <div className="w-full flex flex-col gap-6 max-w-[1600px] mx-auto">
@@ -39,7 +42,8 @@ export default function DigitalClassroom() {
               style={{ height: 'calc(100vh - 220px)', minHeight: '580px' }} 
               className="w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-0" 
             >
-              <MemoizedWhiteboard />
+              {/* Pass the session ID to the whiteboard component */}
+              <MemoizedWhiteboard sessionId={ACTIVE_SESSION_ID} />
             </div>
           </main>
 
@@ -60,7 +64,8 @@ export default function DigitalClassroom() {
               </div>
               
               <div className="w-full flex-1 flex flex-col overflow-hidden min-h-0">
-                <MemoizedChat />
+                {/* Pass the session ID to the chat component */}
+                <MemoizedChat sessionId={ACTIVE_SESSION_ID} />
               </div>
             </div>
           </aside>
