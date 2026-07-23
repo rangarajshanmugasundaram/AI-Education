@@ -1,19 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 const VideoPlayerModal = ({ playbackData, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(true);
 
+  // Lock scroll position when modal opens
+  useEffect(() => {
+    if (!playbackData) return;
+
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [playbackData]);
+
   if (!playbackData) return null;
 
-  // Render the modal into a Portal attached directly to document.body
   return ReactDOM.createPortal(
-    <div style={{ zIndex: 99999 }} className="fixed inset-0 bg-slate-950/50 backdrop-blur-xl flex items-center justify-center p-4 transition-all duration-300">
-      
-      {/* Premium White Floating Content Card */}
+    <div 
+      onFocus={(e) => e.stopPropagation()}
+      style={{ zIndex: 99999 }} 
+      className="fixed inset-0 bg-slate-950/50 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300"
+    >
       <div className="bg-white text-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col transform scale-100 transition-transform">
         
-        {/* Modal Header Panel */}
         <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 shrink-0 uppercase tracking-wider">
@@ -25,7 +42,7 @@ const VideoPlayerModal = ({ playbackData, onClose }) => {
           </div>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200/80 p-2 rounded-full transition-all duration-200"
+            className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200/80 p-2 rounded-full transition-all duration-200 cursor-pointer"
             aria-label="Close Player"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -34,13 +51,12 @@ const VideoPlayerModal = ({ playbackData, onClose }) => {
           </button>
         </div>
 
-        {/* Cinematic Video Player Core Frame */}
         <div className="aspect-video bg-slate-950 relative flex flex-col items-center justify-center p-6 group select-none overflow-hidden m-4 sm:m-6 rounded-xl shadow-inner border border-slate-900">
           
           <div className="z-10 flex flex-col items-center">
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
-              className={`w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 ${
+              className={`w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 cursor-pointer ${
                 isPlaying 
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 animate-pulse' 
                   : 'bg-zinc-800 text-zinc-100 border-zinc-700 scale-105 shadow-xl hover:bg-zinc-700'
@@ -62,10 +78,10 @@ const VideoPlayerModal = ({ playbackData, onClose }) => {
             <p className="text-xs text-zinc-500 mt-1">Simulated video workspace running stable</p>
           </div>
 
-          {/* Timeline and Overlay Progress Controls */}
           <div 
-          style={{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0) 100%)' }}
-          className="absolute inset-x-0 bottom-0 flex flex-col gap-2.5 p-5 pt-12 opacity-90 transition-opacity group-hover:opacity-100">
+            style={{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0) 100%)' }}
+            className="absolute inset-x-0 bottom-0 flex flex-col gap-2.5 p-5 pt-12 opacity-90 transition-opacity group-hover:opacity-100"
+          >
             <div className="relative w-full h-1 bg-zinc-700 rounded-full cursor-pointer">
               <div className={`absolute top-0 left-0 h-full bg-emerald-500 rounded-full ${isPlaying ? 'w-1/3' : 'w-1/3 bg-zinc-500'}`} />
             </div>
@@ -76,14 +92,13 @@ const VideoPlayerModal = ({ playbackData, onClose }) => {
           </div>
         </div>
 
-        {/* Modal Meta Footer Panel */}
         <div className="px-6 py-4 bg-slate-50 flex justify-between items-center text-xs text-slate-500 border-t border-slate-100">
           <div>
             <strong>Uploaded Date:</strong> {playbackData.uploadedDate}
           </div>
           <button 
             onClick={onClose}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm shadow-blue-500/10 transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg shadow-sm shadow-blue-500/10 transition-colors cursor-pointer"
           >
             Close Stream
           </button>

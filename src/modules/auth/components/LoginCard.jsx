@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { loginUser } from './auth/authService';
+import { loginUser } from "../../../services/features/authService";
 
 const LoginCard = () => {
   const [email, setEmail] = useState('');

@@ -12,12 +12,13 @@ const AccessDenied = () => {
         Access Denied
       </h1>
       <p className="text-slate-500 max-w-md text-[15px] leading-relaxed mb-8">
+        You don't have permission to view this page. Please log in with valid credentials.
       </p>
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/login')}
         className="px-5 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all shadow-md shadow-slate-900/10 cursor-pointer"
       >
-        Go Back to Dashboard
+        Go to Login
       </button>
     </div>
   );

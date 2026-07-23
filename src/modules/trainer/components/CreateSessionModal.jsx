@@ -1,142 +1,130 @@
-import { useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect } from 'react';
 
-const MOCK_BATCHES = [
-  { id: 'b1', name: 'Full Stack JavaScript - Batch A' },
-  { id: 'b2', name: 'React Frontend Development - Morning' },
-  { id: 'b3', name: 'UI/UX Design Masterclass - Evening' }
-];
+export const CreateSessionModal = ({ 
+  isOpen, 
+  onClose, 
+  onCreateSession, 
+  userRole = 'Trainer' 
+}) => {
+  const [formData, setFormData] = useState({
+    batchName: '',
+    sessionId: 'session_101', // 👈 FIXED DEFAULT SESSION ID FOR BOTH ROLES
+    date: '',
+    time: '',
+  });
 
-export default function CreateSessionModal({ isOpen, onClose, onCreateSession }) {
-  const [selectedBatch, setSelectedBatch] = useState('');
-  const [sessionDate, setSessionDate] = useState('');
-  const [sessionTime, setSessionTime] = useState('');
-  const backdropRef = useRef(null);
+  const isTrainer = userRole.toLowerCase() === 'trainer';
 
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
+  // Always reset/enforce 'session_101' when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedBatch('');
-      setSessionDate('');
-      setSessionTime('');
+      setFormData({
+        batchName: isTrainer ? 'Full Stack Web Dev - Batch A' : 'Web Dev Class',
+        sessionId: 'session_101', // 👈 Fixed room ID so Trainer & Student share the same room
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, isTrainer]);
 
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e) => {
-    if (e.target === backdropRef.current) {
-      onClose();
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedBatch || !sessionDate || !sessionTime) {
-      alert("Please fill in all fields to generate the meeting!");
-      return;
-    }
 
-    const batchName = MOCK_BATCHES.find(b => b.id === selectedBatch)?.name;
+    const formattedDateTime = formData.date && formData.time 
+      ? `${formData.date} at ${formData.time}`
+      : 'Immediate Live Session';
 
     onCreateSession({
-      batchName,
-      dateTime: `${sessionDate} at ${sessionTime}`,
+      batchName: formData.batchName || 'Default Batch',
+      sessionId: 'session_101', // 👈 Enforce default session ID
+      dateTime: formattedDateTime,
+      createdByRole: userRole,
     });
+
+    onClose();
   };
 
-  return ReactDOM.createPortal(
-    <div 
-      ref={backdropRef}
-      onClick={handleBackdropClick}
-      style={{ zIndex: 99999 }}
-      className="fixed inset-0 bg-slate-950/40 backdrop-blur-xl flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-300"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full max-h-[92vh] sm:max-h-none overflow-y-auto p-5 sm:p-6 border border-slate-100 transform transition-all flex flex-col">
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
         
-        <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-5 shrink-0">
-          <h3 className="text-base font-bold text-slate-900 tracking-tight">
-            Schedule New Live Session
-          </h3>
-          <button 
-            type="button"
-            onClick={onClose} 
-            className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors flex items-center justify-center"
-            aria-label="Close modal"
+        {/* Modal Header */}
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              {isTrainer ? 'Start Live Session' : 'Join Live Classroom'}
+            </h3>
+            <p className="text-xs text-slate-500">
+              Shared Room: <span className="font-mono font-bold text-indigo-600">session_101</span>
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 transition cursor-pointer"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 flex-1 pb-4 sm:pb-0">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-700">Select Batch</label>
-            <select
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
-              className="w-full h-11 sm:h-10 border border-slate-200 rounded-xl px-3 bg-white text-base sm:text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer"
-            >
-              <option value="">-- Choose a Batch --</option>
-              {MOCK_BATCHES.map(batch => (
-                <option key={batch.id} value={batch.id}>{batch.name}</option>
-              ))}
-            </select>
+        {/* Modal Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-slate-800">
+          {/* Batch Name */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Batch / Course Name
+            </label>
+            <input
+              type="text"
+              name="batchName"
+              value={formData.batchName}
+              onChange={handleChange}
+              placeholder="e.g., Full Stack Web Dev"
+              className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700">Choose Date</label>
-              <input
-                type="date"
-                value={sessionDate}
-                onChange={(e) => setSessionDate(e.target.value)}
-                className="w-full h-11 sm:h-10 border border-slate-200 rounded-xl px-3 text-base sm:text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700">Choose Time</label>
-              <input
-                type="time"
-                value={sessionTime}
-                onChange={(e) => setSessionTime(e.target.value)}
-                className="w-full h-11 sm:h-10 border border-slate-200 rounded-xl px-3 text-base sm:text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer"
-              />
-            </div>
+          {/* Locked Session Room ID */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Active Room ID
+            </label>
+            <input
+              type="text"
+              name="sessionId"
+              value="session_101"
+              readOnly
+              className="w-full px-3.5 py-2.5 text-xs bg-slate-100 border border-slate-300 font-mono font-bold text-slate-700 rounded-xl focus:outline-none transition cursor-not-allowed"
+            />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-2 pt-4 border-t border-slate-100 mt-6">
+          {/* Action Buttons */}
+          <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="h-11 sm:h-9 px-4 border border-slate-200 rounded-xl text-sm sm:text-xs font-semibold text-slate-600 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+              className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="h-11 sm:h-9 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm sm:text-xs font-semibold shadow-sm transition-all"
+              className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] rounded-xl shadow-md transition cursor-pointer"
             >
-              Generate Meeting & Save
+              {isTrainer ? '🚀 Launch session_101' : '🎓 Enter session_101'}
             </button>
           </div>
         </form>
+
       </div>
-    </div>,
-    document.body
+    </div>
   );
-}
+};
+
+export default CreateSessionModal;

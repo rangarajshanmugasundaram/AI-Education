@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Pass sessionId down as a prop from the main Classroom layout page
 export default function ClassroomChat({ sessionId = 'session_101' }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const chatBottomRef = useRef(null);
+  
+  // Ref attached directly to the message feed container
+  const messagesContainerRef = useRef(null);
 
-  // Match your exact setup tokens and keys
   const getAuthToken = () => localStorage.getItem('token') || 'mock-jwt-token-from-backend-xyz123'; 
   const getUserEmail = () => localStorage.getItem('user_email') || 'trainertest@gmail.com';
   const getUserRole = () => localStorage.getItem('role') || 'Trainer';
 
-  // 1. Fetch Chat History from the Backend
+  // Fetch Chat History
   const fetchChatHistory = useCallback(async () => {
     const token = getAuthToken();
     const email = getUserEmail();
@@ -32,13 +32,11 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
 
       const data = await response.json();
       
-      // Map Django SQLite model fields directly to your UI components
       const formattedMessages = data.map(msg => ({
         id: msg.message_id,
         sender: msg.sender_name,
         text: msg.message,
         timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        // Dynamically flags trainers or specific admins
         isAdmin: msg.sender_name.toLowerCase().includes('trainer') || msg.message_type === 'System'
       }));
 
@@ -51,19 +49,21 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     }
   }, [sessionId]);
 
-  // Initial lookup and polling cycle to keep it responsive during your presentation
+  // Polling Cycle
   useEffect(() => {
     fetchChatHistory();
-    const pollInterval = setInterval(fetchChatHistory, 3000); // 3 seconds polling
+    const pollInterval = setInterval(fetchChatHistory, 3000);
     return () => clearInterval(pollInterval);
   }, [fetchChatHistory]);
 
-  // Handle viewing position
+  // Internal container scroll only (Prevents window page scrolling)
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  // 2. Post New Message to Backend API
+  // Send Message
   const handleSendMessage = useCallback(async (e) => {
     e.preventDefault();
     const cleanInput = inputValue.trim();
@@ -72,7 +72,6 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     const token = getAuthToken();
     const email = getUserEmail();
 
-    // Clear field directly for visual performance responsiveness
     setInputValue('');
 
     try {
@@ -102,7 +101,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     }
   }, [inputValue, sessionId, fetchChatHistory]);
 
-  // 3. Delete Message Handler (Trainer Only)
+  // Delete Message
   const handleDeleteMessage = async (messageId) => {
     const token = getAuthToken();
     const email = getUserEmail();
@@ -130,7 +129,10 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     <div className="flex flex-col w-full h-full min-h-0 bg-white overflow-hidden">
       
       {/* Messages Feed Viewport */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50"
+      >
         {isLoading && messages.length === 0 ? (
           <div className="text-center text-xs text-slate-400 py-4">Syncing chat logs...</div>
         ) : error ? (
@@ -139,7 +141,6 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
           <div className="text-center text-xs text-slate-400 py-4">No messages yet in this session. Send one to start!</div>
         ) : (
           messages.map((msg) => {
-            // Check if current user email or name matches the row log
             const isMe = msg.sender.toLowerCase().includes('trainer') || msg.sender === localStorage.getItem('username');
 
             return (
@@ -161,11 +162,10 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
                     {msg.text}
                   </div>
 
-                  {/* Professional SVG Trash Delete Button (Renders if Role is Trainer) */}
                   {getUserRole() === 'Trainer' && (
                     <button 
                       onClick={() => handleDeleteMessage(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-full bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 shadow-sm transition-all duration-150 shrink-0"
+                      className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-full bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 shadow-sm transition-all duration-150 shrink-0 cursor-pointer"
                       title="Delete message"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -178,10 +178,9 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
             );
           })
         )}
-        <div ref={chatBottomRef} />
       </div>
 
-      {/* Input Form Box Container */}
+      {/* Input Form Box */}
       <form 
         onSubmit={handleSendMessage} 
         className="p-3 border-t border-slate-100 bg-white shrink-0"
@@ -197,7 +196,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="bg-blue-600 text-white font-bold text-xs px-4 h-9 rounded-lg hover:bg-blue-700 active:scale-[0.97] transition-all disabled:opacity-30 disabled:pointer-events-none shrink-0"
+            className="bg-blue-600 text-white font-bold text-xs px-4 h-9 rounded-lg hover:bg-blue-700 active:scale-[0.97] transition-all disabled:opacity-30 disabled:pointer-events-none shrink-0 cursor-pointer"
           >
             Send
           </button>

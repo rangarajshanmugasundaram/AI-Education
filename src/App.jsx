@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './layouts/ProtectedRoute';
+import AppLayout from './layouts/AppLayout';
 
 const Login = lazy(() => import('./modules/auth/pages/Login'));
 const Register = lazy(() => import('./modules/auth/pages/Register'));
@@ -11,51 +12,63 @@ const DigitalClassroom = lazy(() => import('./modules/trainer/pages/DigitalClass
 const SessionRecordings = lazy(() => import('./modules/trainer/pages/SessionRecordings')); 
 const SessionManagement = lazy(() => import('./modules/trainer/pages/SessionManagement')); 
 const AttendanceDashboard = lazy(() => import('./modules/attendance/pages/AttendanceDashboard'));
+const LiveClassroomPage = lazy(() => import('./modules/trainer/pages/LiveClassroomPage'));
 
 function App() {
+  const userRole = localStorage.getItem('user_role') || 'Student';
+
   return (
     <BrowserRouter>
-      <div className="min-h-screen w-full bg-slate-50">
-        <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium">Loading...</div>}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            <Route path="/" element={
-              <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
-                <TrainerDashboard />
-              </ProtectedRoute>
-            } />
+      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium">Loading...</div>}>
+        <Routes>
+          {/* Public Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-            <Route path="/digital-classroom" element={
-              <ProtectedRoute allowedRoles={['Student', 'Teacher', 'Trainer', 'Admin']}>
-                <DigitalClassroom />
-              </ProtectedRoute>
-            } />
-            <Route path="/attendance" element={
-  <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
-    <AttendanceDashboard />
-  </ProtectedRoute>
-} />
+          {/* Full-Screen Meeting Room */}
+          <Route path="/live-session/:sessionId" element={
+            <ProtectedRoute allowedRoles={['Student', 'Teacher', 'Trainer', 'Admin']}>
+              <LiveClassroomPage />
+            </ProtectedRoute>
+          } />
 
-            <Route path="/session-recordings" element={ 
-              <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
-                <SessionRecordings />
-              </ProtectedRoute>
-            } />
+          {/* Role-Based Navigation Routes */}
+          <Route path="/" element={
+            <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
+              <AppLayout><TrainerDashboard /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-            <Route path="/session-management" element={
-              <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
-                <SessionManagement />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Suspense>
-      </div>
+          <Route path="/digital-classroom" element={
+            <ProtectedRoute allowedRoles={['Student', 'Teacher', 'Trainer', 'Admin']}>
+              <AppLayout><DigitalClassroom /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/attendance" element={
+            <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
+              <AppLayout><AttendanceDashboard /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/session-recordings" element={ 
+            <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
+              <AppLayout><SessionRecordings /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/session-management" element={
+            <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
+              <AppLayout><SessionManagement /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Smart Fallback Navigation */}
+          <Route path="*" element={<Navigate to={userRole === 'Student' ? "/digital-classroom" : "/"} replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

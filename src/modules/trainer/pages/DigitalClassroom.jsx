@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import WhiteboardZone from '../components/WhiteboardZone';
 import ClassroomChat from '../components/ClassroomChat';
 
@@ -6,8 +7,18 @@ const MemoizedWhiteboard = memo(WhiteboardZone);
 const MemoizedChat = memo(ClassroomChat);
 
 export default function DigitalClassroom() {
-  // Define your session ID here (this could also come from a URL parameter or context)
+  const navigate = useNavigate();
+
+  // Define your session ID here
   const ACTIVE_SESSION_ID = "session_101";
+
+  // Identify Current User Role from local storage
+  const userRole = localStorage.getItem('user_role') || 'Student';
+
+  // Handler to redirect student into the full-screen live meeting page
+  const handleJoinLiveSession = () => {
+    navigate(`/live-session/${ACTIVE_SESSION_ID}`);
+  };
 
   return (
     <>
@@ -24,9 +35,23 @@ export default function DigitalClassroom() {
             </p>
           </div>
           
-          <div className="self-start sm:self-center flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold border border-amber-100">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
-            Live Session Active
+          <div className="flex items-center gap-3 self-start sm:self-center">
+            {/* Live Indicator Tag */}
+            <div className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold border border-amber-100">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+              Live Session Active
+            </div>
+
+            {/* 🎓 JOIN BUTTON FOR STUDENTS ONLY */}
+            {userRole === 'Student' && (
+              <button
+                type="button"
+                onClick={handleJoinLiveSession}
+                className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>📹</span> Join Live Meeting
+              </button>
+            )}
           </div>
         </header>
 
@@ -42,7 +67,6 @@ export default function DigitalClassroom() {
               style={{ height: 'calc(100vh - 220px)', minHeight: '580px' }} 
               className="w-full bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-0" 
             >
-              {/* Pass the session ID to the whiteboard component */}
               <MemoizedWhiteboard sessionId={ACTIVE_SESSION_ID} />
             </div>
           </main>
@@ -64,7 +88,6 @@ export default function DigitalClassroom() {
               </div>
               
               <div className="w-full flex-1 flex flex-col overflow-hidden min-h-0">
-                {/* Pass the session ID to the chat component */}
                 <MemoizedChat sessionId={ACTIVE_SESSION_ID} />
               </div>
             </div>

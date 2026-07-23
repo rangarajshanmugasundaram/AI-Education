@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import CreateSessionModal from '../components/CreateSessionModal';
+import { useNavigate } from 'react-router-dom';
+import CreateLiveSessionButton from '../components/CreateLiveSessionButton';
 import UploadRecordingModal from '../components/UploadRecordingModal'; 
 
 export default function TrainerDashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
 
   const [sessions, setSessions] = useState([
@@ -41,22 +42,8 @@ export default function TrainerDashboard() {
     }
   ];
 
-  const handleCreateSession = useCallback((newSessionData) => {
-    const generatedId = `sess-${Math.random().toString(36).substring(2, 7)}`;
-    const completeSession = {
-      id: generatedId,
-      batchName: newSessionData.batchName || 'Unspecified Batch',
-      dateTime: newSessionData.dateTime,
-      notified: false
-    };
-    
-    setSessions((prevSessions) => [completeSession, ...prevSessions]);
-    setIsModalOpen(false); 
-    alert(`Meeting Successfully Generated!\nRoom ID: ${generatedId}`);
-  }, []);
-
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
+  const handleSessionCreated = useCallback((newSession) => {
+    setSessions((prev) => [newSession, ...prev]);
   }, []);
 
   const handleAddRecording = useCallback((newRecording) => {
@@ -66,6 +53,10 @@ export default function TrainerDashboard() {
   const handleNotifyStudents = (id) => {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, notified: true } : s));
     alert("System Update: Notifications pushed to all student profiles in this batch!");
+  };
+
+  const handleStartSession = (sessionId) => {
+    navigate(`/live-session/${sessionId}`);
   };
 
   return (
@@ -91,13 +82,9 @@ export default function TrainerDashboard() {
             >
               <span className="text-sm font-medium">+</span> Upload Recording
             </button>
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="w-full sm:w-auto h-11 sm:h-10 text-center justify-center bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold px-5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <span className="text-sm font-medium">+</span> Create Live Session
-            </button>
+            
+            {/* Modular Independent Component */}
+            <CreateLiveSessionButton onSessionCreated={handleSessionCreated} />
           </div>
         </header>
 
@@ -145,7 +132,7 @@ export default function TrainerDashboard() {
                       </button>
                       <button 
                         type="button"
-                        onClick={() => alert(`Redirecting to live classroom room ID: ${session.id}`)}
+                        onClick={() => handleStartSession(session.id)}
                         className="h-11 sm:h-9 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold px-4 rounded-xl shadow-md transition-all text-center cursor-pointer"
                       >
                         Start Session
@@ -264,13 +251,6 @@ export default function TrainerDashboard() {
         </div>
 
       </div>
-
-      {/* Portal Trigger Control Modals */}
-      <CreateSessionModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onCreateSession={handleCreateSession}
-      />
 
       <UploadRecordingModal 
         isOpen={isUploadModalOpen}
