@@ -1,7 +1,7 @@
 class ClassroomWebSocketService {
   constructor() {
     this.socket = null;
-    this.listeners = new Map(); // Store event listeners
+    this.listeners = new Map();
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.isExplicitlyClosed = false;
@@ -12,16 +12,14 @@ class ClassroomWebSocketService {
    * @param {string|number} classroomId 
    */
   connect(classroomId) {
-    // Prevent duplicate connections if already connected or connecting
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
       return;
     }
 
     this.isExplicitlyClosed = false;
-    const token = localStorage.getItem('token') || 'mock-jwt-token-from-backend-xyz123';
-    const email = localStorage.getItem('user_email') || 'trainer1@gmail.com';
+    const token = localStorage.getItem('token') || '';
+    const email = localStorage.getItem('user_email') || '';
     
-    // Construct Django Channels WS URL with query params
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${wsProtocol}//127.0.0.1:8000/ws/classroom/${classroomId}/?token=${token}&email=${encodeURIComponent(email)}`;
 
@@ -45,7 +43,6 @@ class ClassroomWebSocketService {
     };
 
     this.socket.onerror = (error) => {
-      // Ignore errors caused by intentional aborts during initial handshake
       if (this.isExplicitlyClosed) return;
       console.error('❌ WebSocket Error:', error);
     };
@@ -53,7 +50,6 @@ class ClassroomWebSocketService {
     this.socket.onclose = (event) => {
       this.triggerEvent('connection_status', { connected: false });
 
-      // Do not attempt reconnection if the component explicitly unmounted
       if (this.isExplicitlyClosed) {
         console.log('🔌 WebSocket closed intentionally.');
         return;
@@ -61,7 +57,6 @@ class ClassroomWebSocketService {
       
       console.log('⚠️ WebSocket disconnected:', event.reason);
       
-      // Auto reconnect attempt
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
         console.log(`Reconnecting attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}...`);
@@ -70,9 +65,6 @@ class ClassroomWebSocketService {
     };
   }
 
-  /**
-   * Send realtime actions/messages to Django Channels Consumer
-   */
   send(type, payload = {}) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({ type, ...payload }));
@@ -81,9 +73,6 @@ class ClassroomWebSocketService {
     }
   }
 
-  /**
-   * Subscribe to specific real-time events
-   */
   on(eventType, callback) {
     if (!this.listeners.has(eventType)) {
       this.listeners.set(eventType, []);
@@ -91,9 +80,6 @@ class ClassroomWebSocketService {
     this.listeners.get(eventType).push(callback);
   }
 
-  /**
-   * Unsubscribe from events to prevent memory leaks in React components
-   */
   off(eventType, callback) {
     if (!this.listeners.has(eventType)) return;
     const callbacks = this.listeners.get(eventType).filter(cb => cb !== callback);
@@ -109,8 +95,13 @@ class ClassroomWebSocketService {
   disconnect() {
     if (this.socket) {
       this.isExplicitlyClosed = true;
-      // Close socket cleanly
-      this.socket.close();
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.socket.close();
+      } else if (this.socket.readyState === WebSocket.CONNECTING) {
+        this.socket.onopen = () => {
+          this.socket.close();
+        };
+      }
       this.socket = null;
       this.listeners.clear();
     }

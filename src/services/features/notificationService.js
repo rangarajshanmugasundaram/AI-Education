@@ -1,16 +1,17 @@
-import axiosSetup from '../api/axiosSetup'; // Adjust path to match your axios instance if needed
+import axiosSetup from '../api/axiosSetup';
+import { API_ENDPOINTS } from '../../constants/apiEndpoints';
 
 export const notificationService = {
   // GET /api/notifications/ - Trainer/Admin fetch
   getAll: async (params = {}) => {
-    const response = await axiosSetup.get('/api/notifications/', { params });
+    const response = await axiosSetup.get(API_ENDPOINTS.NOTIFICATIONS.ALL, { params });
     return response;
   },
 
   // GET /api/notifications/my/ - Student fetch
   getMy: async () => {
     const email = localStorage.getItem('user_email') || '';
-    const response = await axiosSetup.get('/api/notifications/my/', {
+    const response = await axiosSetup.get(API_ENDPOINTS.NOTIFICATIONS.MY, {
       headers: {
         'X-User-Email': email,
       },
@@ -25,7 +26,7 @@ export const notificationService = {
 
   // POST /api/notifications/
   create: async (data) => {
-    return await axiosSetup.post('/api/notifications/', data);
+    return await axiosSetup.post(API_ENDPOINTS.NOTIFICATIONS.CREATE, data);
   },
 
   // PUT /api/notifications/:id/

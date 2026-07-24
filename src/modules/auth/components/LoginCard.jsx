@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from "../../../services/features/authService";
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES } from '../../../constants/roles';
 
 const LoginCard = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +10,7 @@ const LoginCard = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -23,14 +26,21 @@ const LoginCard = () => {
       
       const responseData = response?.data || response;
       
-      const userRole = responseData?.role || "Student";
+      const userRole = responseData?.role || ROLES.STUDENT;
       const token = responseData?.token || "";
+      const userEmail = email.trim().toLowerCase();
       
       console.log("Extracted Role:", userRole);
-      
+
+      // 🌟 Centralized AuthContext Login Call
+      login({
+        token,
+        email: userEmail,
+        role: userRole
+      });
+
+      // Maintain legacy flags for any remaining background checks
       localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userRole", userRole);
-      localStorage.setItem("token", token);
       
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
@@ -38,7 +48,7 @@ const LoginCard = () => {
         localStorage.removeItem("rememberedEmail");
       }
       
-      if (userRole === 'Trainer' || userRole === 'Admin') {
+      if (userRole === ROLES.TRAINER || userRole === ROLES.ADMIN) {
         navigate('/'); 
       } else {
         navigate('/digital-classroom'); 
@@ -105,7 +115,7 @@ const LoginCard = () => {
       <button 
         type="submit" 
         disabled={loading}
-        style={{ background: 'linear-gradient(to bottom right, #2563eb, #1d4ed8)',}}
+        style={{ background: 'linear-gradient(to bottom right, #2563eb, #1d4ed8)' }}
         className="mt-2 p-4 w-full rounded-xl text-base font-semibold text-white cursor-pointer transition-all duration-200 hover:shadow-lg active:opacity-90 disabled:opacity-50"
       >
         {loading ? "Signing in..." : "Sign In"}

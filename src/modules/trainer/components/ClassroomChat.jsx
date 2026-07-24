@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import axiosInstance from '../../../services/api/axiosSetup'; // Adjust path if needed to point to your axios instance
 
 export default function ClassroomChat({ sessionId = 'session_101' }) {
   const [messages, setMessages] = useState([]);
@@ -6,57 +7,74 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Ref attached directly to the message feed container
   const messagesContainerRef = useRef(null);
 
-  const getAuthToken = () => localStorage.getItem('token') || 'mock-jwt-token-from-backend-xyz123'; 
-  const getUserEmail = () => localStorage.getItem('user_email') || 'trainertest@gmail.com';
-  const getUserRole = () => localStorage.getItem('role') || 'Trainer';
+  const getUserRole = () => localStorage.getItem('user_role') || 'Student';
+  const getUserEmail = () => localStorage.getItem('user_email') || '';
 
-  // Fetch Chat History
+  // Fetch Chat History using configured Axios Instance
   const fetchChatHistory = useCallback(async () => {
-    const token = getAuthToken();
-    const email = getUserEmail();
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setError('Authentication token missing. Please log in.');
+      setIsLoading(false);
+      return false; // Return false to indicate failure & stop polling
+    }
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/chat/session/${sessionId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-User-Email': email.trim().toLowerCase(),
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch messages.');
-
-      const data = await response.json();
+      const response = await axiosInstance.get(`/api/chat/session/${sessionId}`);
+      const data = response.data || [];
       
-      const formattedMessages = data.map(msg => ({
-        id: msg.message_id,
-        sender: msg.sender_name,
+      const formattedMessages = (Array.isArray(data) ? data : []).map(msg => ({
+        id: msg.message_id || msg.id,
+        sender: msg.sender_name || msg.sender_id || 'User',
         text: msg.message,
-        timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isAdmin: msg.sender_name.toLowerCase().includes('trainer') || msg.message_type === 'System'
+        timestamp: msg.timestamp 
+          ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Just now',
+        isAdmin: (msg.sender_name || '').toLowerCase().includes('trainer') || msg.message_type === 'System'
       }));
 
       setMessages(formattedMessages);
       setError(null);
+      return true;
     } catch (err) {
-      setError(err.message);
+      console.error('Chat Sync Error:', err);
+      const status = err.response?.status;
+      if (status === 401) {
+        setError('Session expired or unauthorized. Please log in again.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to sync chat messages.');
+      }
+      return false; // Stop polling on error
     } finally {
       setIsLoading(false);
     }
   }, [sessionId]);
 
-  // Polling Cycle
+  // Safe Polling Cycle (Auto-stops if unauthenticated)
   useEffect(() => {
-    fetchChatHistory();
-    const pollInterval = setInterval(fetchChatHistory, 3000);
-    return () => clearInterval(pollInterval);
+    let isMounted = true;
+    
+    const runPolling = async () => {
+      const success = await fetchChatHistory();
+      if (!success && isMounted) {
+        // Stop polling if request failed with auth error
+        clearInterval(pollInterval);
+      }
+    };
+
+    runPolling();
+    const pollInterval = setInterval(runPolling, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(pollInterval);
+    };
   }, [fetchChatHistory]);
 
-  // Internal container scroll only (Prevents window page scrolling)
+  // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -69,59 +87,31 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     const cleanInput = inputValue.trim();
     if (!cleanInput) return;
 
-    const token = getAuthToken();
-    const email = getUserEmail();
-
     setInputValue('');
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/chat/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-User-Email': email.trim().toLowerCase(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          message: cleanInput,
-          message_type: 'Text'
-        })
+      await axiosInstance.post('/api/chat/send', {
+        session_id: sessionId,
+        message: cleanInput,
+        message_type: 'Text'
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Error executing request.');
-      }
 
       fetchChatHistory();
     } catch (err) {
-      alert(`Message delivery failed: ${err.message}`);
+      alert(`Message delivery failed: ${err.response?.data?.error || err.message}`);
       setInputValue(cleanInput); 
     }
   }, [inputValue, sessionId, fetchChatHistory]);
 
   // Delete Message
   const handleDeleteMessage = async (messageId) => {
-    const token = getAuthToken();
-    const email = getUserEmail();
     if (!window.confirm("Are you sure you want to delete this message?")) return;
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/chat/${messageId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-User-Email': email.trim().toLowerCase(),
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) throw new Error('Unauthorized or message not found.');
-      
+      await axiosInstance.delete(`/api/chat/${messageId}`);
       setMessages((prev) => prev.filter(msg => msg.id !== messageId));
     } catch (err) {
-      alert(err.message);
+      alert(err.response?.data?.error || 'Failed to delete message.');
     }
   };
 
@@ -136,12 +126,13 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
         {isLoading && messages.length === 0 ? (
           <div className="text-center text-xs text-slate-400 py-4">Syncing chat logs...</div>
         ) : error ? (
-          <div className="text-center text-xs text-red-500 py-4">Error: {error}</div>
+          <div className="text-center text-xs text-red-500 py-4 font-medium">{error}</div>
         ) : messages.length === 0 ? (
           <div className="text-center text-xs text-slate-400 py-4">No messages yet in this session. Send one to start!</div>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.sender.toLowerCase().includes('trainer') || msg.sender === localStorage.getItem('username');
+            const currentEmail = getUserEmail();
+            const isMe = (msg.sender || '').toLowerCase().includes('trainer') || msg.sender === currentEmail;
 
             return (
               <div 
@@ -162,7 +153,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
                     {msg.text}
                   </div>
 
-                  {getUserRole() === 'Trainer' && (
+                  {getUserRole().toLowerCase() === 'trainer' && (
                     <button 
                       onClick={() => handleDeleteMessage(msg.id)}
                       className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-full bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 shadow-sm transition-all duration-150 shrink-0 cursor-pointer"

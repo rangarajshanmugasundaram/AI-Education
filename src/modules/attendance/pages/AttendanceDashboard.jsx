@@ -4,10 +4,9 @@ import AttendanceFilters from '../components/AttendanceFilters';
 import AttendanceTable from '../components/AttendanceTable';
 import AttendanceCard from '../components/AttendanceCard';
 import AttendanceDetailsModal from '../components/AttendanceDetailsModal';
-import { getData } from '../../auth/components/API/getData';
-import { putData } from '../../auth/components/API/putData';
 
-// 🌟 OPTIMIZATION 1: Highly optimized sub-render tree node using CSS contain parameters
+import axiosInstance from '../../../services/api/axiosSetup';
+
 const MemoizedDurationValue = React.memo(({ value }) => {
   return (
     <div style={{ minWidth: '100px' }} className="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-right contain-paint">
@@ -26,7 +25,6 @@ export default function AttendanceDashboard() {
   const [error, setError] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
   
-  // Initialize with standard server-side viewport dimensions to prevent immediate layout shift on mount
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth < 768;
@@ -52,7 +50,7 @@ export default function AttendanceDashboard() {
 
   const containerRef = useRef(null);
 
-  // 🌟 OPTIMIZATION 2: Replaced heavy 'resize' event listener with a highly-performant passive ResizeObserver
+  // Passive ResizeObserver for responsive table/card switching
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ResizeObserver) return;
 
@@ -72,7 +70,8 @@ export default function AttendanceDashboard() {
 
   const fetchAttendanceReport = useCallback(async (sessionId) => {
     try {
-      const reportResponse = await getData(`/api/attendance/report/${sessionId}`);
+      const response = await axiosInstance.get(`/api/attendance/report/${sessionId}`);
+      const reportResponse = response.data || {};
       if (reportResponse && reportResponse.metrics) {
         setReportMetrics({
           totalStudents: reportResponse.metrics.total_students_logged || 0,
@@ -88,22 +87,23 @@ export default function AttendanceDashboard() {
     }
   }, []);
 
-  // 🌟 OPTIMIZATION 3: Grouped API response sets to minimize layout thrashing paint runs
+  // Primary API fetch cycle
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const targetSession = filters.session || 'all';
       
-      // Fetch both details in parallel instead of sequentially waiting
-      const [response, reportResponse] = await Promise.all([
-        getData(`/api/attendance/session/${targetSession}`),
-        getData(`/api/attendance/report/${targetSession}`)
+      const [recordsRes, reportRes] = await Promise.allSettled([
+        axiosInstance.get(`/api/attendance/session/${targetSession}`),
+        axiosInstance.get(`/api/attendance/report/${targetSession}`)
       ]);
 
-      const fetchedRecords = response?.records || [];
+      const recordsData = recordsRes.status === 'fulfilled' ? recordsRes.value.data : {};
+      const reportData = reportRes.status === 'fulfilled' ? reportRes.value.data : {};
+
+      const fetchedRecords = Array.isArray(recordsData) ? recordsData : (recordsData?.records || []);
       
-      // Update data states concurrently
       setRecords(fetchedRecords);
 
       const fetchedUnique = [...new Set(fetchedRecords.map(r => r.session_id))].filter(Boolean);
@@ -111,14 +111,14 @@ export default function AttendanceDashboard() {
         setSessions(prev => [...new Set([...prev, ...fetchedUnique])]);
       }
 
-      if (reportResponse && reportResponse.metrics) {
+      if (reportData && reportData.metrics) {
         setReportMetrics({
-          totalStudents: reportResponse.metrics.total_students_logged || 0,
-          present: reportResponse.metrics.presence_count || 0,
-          absent: reportResponse.metrics.absence_count || 0,
-          late: reportResponse.metrics.lateness_count || 0,
-          attendanceRate: reportResponse.metrics.attendance_percentage || '0%',
-          averageDuration: reportResponse.duration_report?.average_duration_minutes || '0 mins'
+          totalStudents: reportData.metrics.total_students_logged || 0,
+          present: reportData.metrics.presence_count || 0,
+          absent: reportData.metrics.absence_count || 0,
+          late: reportData.metrics.lateness_count || 0,
+          attendanceRate: reportData.metrics.attendance_percentage || '0%',
+          averageDuration: reportData.duration_report?.average_duration_minutes || '0 mins'
         });
       }
 
@@ -136,7 +136,7 @@ export default function AttendanceDashboard() {
 
   const handleUpdateStatus = async (userId, sessionId, newStatus) => {
     try {
-      await putData('/api/attendance/update', {
+      await axiosInstance.put('/api/attendance/update', {
         user_id: userId,
         session_id: sessionId,
         status: newStatus
@@ -149,11 +149,11 @@ export default function AttendanceDashboard() {
       fetchAttendanceReport(filters.session || 'all');
       setSelectedRecord(null);
     } catch (err) {
-      alert(`Backend modification failed: ${err?.message}`);
+      alert(`Backend modification failed: ${err?.response?.data?.error || err?.message}`);
     }
   };
 
-  // 🌟 CORRECT ORDER: Memoize filtered calculations defined FIRST before usage in handlers
+  // Memoized search and filter results
   const filteredRecords = useMemo(() => {
     const query = (filters.searchQuery || '').toLowerCase().trim();
     return records.filter(rec => {
@@ -224,7 +224,7 @@ export default function AttendanceDashboard() {
             </button>
             <button 
               onClick={fetchAttendance}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer"
             >
               Refresh Logs
             </button>
@@ -232,7 +232,7 @@ export default function AttendanceDashboard() {
         </div>
 
         {/* Stats Row */}
-        <div style={{ minHeight: '110px' }} className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6 ">
+        <div style={{ minHeight: '110px' }} className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
           <AttendanceStatsCard 
             title={filters.session === 'all' ? "Total Logs" : "Total Students"} 
             value={reportMetrics.totalStudents} 
@@ -265,7 +265,7 @@ export default function AttendanceDashboard() {
           />
         </div>
 
-        {/* Stable Height Stay Duration Banner */}
+        {/* Average Class Stay Banner */}
         <div style={{ minHeight: '78px' }} className={`bg-white border border-gray-100 shadow-sm rounded-2xl p-4 mb-6 flex items-center justify-between transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="flex items-center gap-3">
             <span className="text-xl">⏱️</span>
@@ -286,7 +286,6 @@ export default function AttendanceDashboard() {
           ) : error ? (
             <div className="p-4 bg-red-50 text-red-700 rounded-lg shadow-sm">{error}</div>
           ) : (
-            /* Viewport Conditional Render */
             <>
               {!isMobile ? (
                 <AttendanceTable 

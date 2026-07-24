@@ -1,17 +1,22 @@
 import { memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { ROLES } from '../constants/roles';
 
 const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userRole } = useAuth();
+
+  const isStudent = userRole.toLowerCase() === ROLES.STUDENT.toLowerCase();
 
   const handleNavigation = (path) => {
     navigate(path);
     if (toggleMobileMenu) toggleMobileMenu();
   };
 
-  // Complete list of all sidebar links
-  const navItems = [
+  // Trainer / Admin navigation links
+  const trainerNavItems = [
     { path: '/', label: 'Dashboard', icon: '📊' },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
     { path: '/attendance', label: 'Attendance', icon: '📋' },
@@ -19,6 +24,14 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/session-management', label: 'Session Management', icon: '⚙️' },
     { path: '/notifications', label: 'Notifications', icon: '📢' },
   ];
+
+  // Student navigation links
+  const studentNavItems = [
+    { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
+    { path: '/notifications-inbox', label: 'Notifications', icon: '🔔' },
+  ];
+
+  const navItems = isStudent ? studentNavItems : trainerNavItems;
 
   return (
     <>
@@ -47,7 +60,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
         {/* Navigation Item List */}
         <nav className="flex-1 overflow-y-auto px-3.5 py-5 space-y-1.5">
           <div className="mb-2.5 px-2.5 text-[10px] font-bold uppercase tracking-widest text-blue-500/80">
-            Workspace
+            {isStudent ? 'Student Workspace' : 'Workspace'}
           </div>
           
           {navItems.map((item) => (

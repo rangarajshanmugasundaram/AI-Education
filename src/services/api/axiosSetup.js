@@ -21,11 +21,18 @@ axiosInstance.interceptors.request.use(
       localStorage.setItem('user_role', paramRole);
     }
 
-    const token = localStorage.getItem('token') || 'mock-jwt-token-xyz123';
-    const email = localStorage.getItem('user_email') || 'trainer1@gmail.com';
+    // Retrieve live token and user details from Local Storage
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('user_email');
 
-    config.headers['Authorization'] = `Bearer ${token}`;
-    config.headers['X-User-Email'] = email ? email.trim().toLowerCase() : '';
+    // Attach Authorization header ONLY if a real token exists
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (email) {
+      config.headers['X-User-Email'] = email.trim().toLowerCase();
+    }
 
     return config;
   },
