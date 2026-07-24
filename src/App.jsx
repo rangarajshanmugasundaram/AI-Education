@@ -14,6 +14,10 @@ const SessionManagement = lazy(() => import('./modules/trainer/pages/SessionMana
 const AttendanceDashboard = lazy(() => import('./modules/attendance/pages/AttendanceDashboard'));
 const LiveClassroomPage = lazy(() => import('./modules/trainer/pages/LiveClassroomPage'));
 
+// 📢 NOTIFICATION MODULE PAGES
+const NotificationDashboard = lazy(() => import('./modules/notifications/pages/NotificationDashboard'));
+const StudentNotificationPanel = lazy(() => import('./modules/notifications/pages/StudentNotificationPanel'));
+
 function App() {
   const userRole = localStorage.getItem('user_role') || 'Student';
 
@@ -62,6 +66,20 @@ function App() {
           <Route path="/session-management" element={
             <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
               <AppLayout><SessionManagement /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* 📢 TRAINER/ADMIN NOTIFICATION MANAGEMENT DASHBOARD */}
+          <Route path="/notifications" element={
+            <ProtectedRoute allowedRoles={['Trainer', 'Admin']}>
+              <AppLayout><NotificationDashboard /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* 🔔 STUDENT NOTIFICATION PAGE (FULL MAIN CONTENT) */}
+          <Route path="/notifications-inbox" element={
+            <ProtectedRoute allowedRoles={['Student', 'Teacher', 'Trainer', 'Admin']}>
+              <AppLayout><StudentNotificationPanel /></AppLayout>
             </ProtectedRoute>
           } />
 

@@ -63,8 +63,8 @@ export default function TrainerDashboard() {
     <>
       <div className="w-full flex flex-col gap-5 sm:gap-6 max-w-[1600px] mx-auto bg-slate-50/30 min-h-screen">
         
-        {/* Hub Header Block */}
-        <header className="w-full bg-white/95 backdrop-blur-sm border border-slate-200/80 rounded-2xl p-4 sm:p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm sticky top-0 z-40 transition-all">
+        {/* Hub Header Block (Clean Header without backdrop blur) */}
+        <header className="w-full bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm sticky top-0 z-10000 transition-all">
           <div className="space-y-1 text-center sm:text-left">
             <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
               Trainer Administration Hub

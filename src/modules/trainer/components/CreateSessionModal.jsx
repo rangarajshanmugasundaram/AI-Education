@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export const CreateSessionModal = ({ 
   isOpen, 
@@ -8,21 +8,31 @@ export const CreateSessionModal = ({
 }) => {
   const [formData, setFormData] = useState({
     batchName: '',
-    sessionId: 'session_101', // 👈 FIXED DEFAULT SESSION ID FOR BOTH ROLES
-    date: '',
-    time: '',
+    tutorName: '',
+    topic: '',
+    startTime: '',
+    endTime: '',
+    sessionId: 'session_101',
   });
 
   const isTrainer = userRole.toLowerCase() === 'trainer';
 
-  // Always reset/enforce 'session_101' when modal opens
+  // Reset defaults when modal opens
   useEffect(() => {
     if (isOpen) {
+      const now = new Date();
+      const defaultStart = now.toTimeString().slice(0, 5); // HH:MM
+      
+      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+      const defaultEnd = oneHourLater.toTimeString().slice(0, 5); // HH:MM
+
       setFormData({
         batchName: isTrainer ? 'Full Stack Web Dev - Batch A' : 'Web Dev Class',
-        sessionId: 'session_101', // 👈 Fixed room ID so Trainer & Student share the same room
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+        tutorName: isTrainer ? 'John Doe' : '',
+        topic: 'React & State Management Basics',
+        startTime: defaultStart,
+        endTime: defaultEnd,
+        sessionId: 'session_101',
       });
     }
   }, [isOpen, isTrainer]);
@@ -37,14 +47,16 @@ export const CreateSessionModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const formattedDateTime = formData.date && formData.time 
-      ? `${formData.date} at ${formData.time}`
+    const formattedTimeRange = formData.startTime && formData.endTime
+      ? `${formData.startTime} - ${formData.endTime}`
       : 'Immediate Live Session';
 
     onCreateSession({
       batchName: formData.batchName || 'Default Batch',
-      sessionId: 'session_101', // 👈 Enforce default session ID
-      dateTime: formattedDateTime,
+      tutorName: formData.tutorName,
+      topic: formData.topic,
+      dateTime: formattedTimeRange,
+      sessionId: 'session_101', // Enforced static session ID
       createdByRole: userRole,
     });
 
@@ -52,11 +64,11 @@ export const CreateSessionModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/70 p-4 animate-fade-in">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
         
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
             <h3 className="text-base font-bold text-slate-900">
               {isTrainer ? 'Start Live Session' : 'Join Live Classroom'}
@@ -66,6 +78,7 @@ export const CreateSessionModal = ({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1 transition cursor-pointer"
           >
@@ -74,7 +87,8 @@ export const CreateSessionModal = ({
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-slate-800">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-slate-800 overflow-y-auto">
+          
           {/* Batch Name */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -88,6 +102,66 @@ export const CreateSessionModal = ({
               placeholder="e.g., Full Stack Web Dev"
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
             />
+          </div>
+
+          {/* Tutor Name & Topic Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Tutor Name
+              </label>
+              <input
+                type="text"
+                name="tutorName"
+                value={formData.tutorName}
+                onChange={handleChange}
+                placeholder="e.g., Prof. Alex Robertson"
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Session Topic
+              </label>
+              <input
+                type="text"
+                name="topic"
+                value={formData.topic}
+                onChange={handleChange}
+                placeholder="e.g., Advanced React Hooks"
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+              />
+            </div>
+          </div>
+
+          {/* Start Time & End Time Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Start Time
+              </label>
+              <input
+                type="time"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleChange}
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                End Time
+              </label>
+              <input
+                type="time"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleChange}
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition"
+              />
+            </div>
           </div>
 
           {/* Locked Session Room ID */}
@@ -105,7 +179,7 @@ export const CreateSessionModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
+          <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100 shrink-0">
             <button
               type="button"
               onClick={onClose}

@@ -10,6 +10,16 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     if (toggleMobileMenu) toggleMobileMenu();
   };
 
+  // Complete list of all sidebar links
+  const navItems = [
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
+    { path: '/attendance', label: 'Attendance', icon: '📋' },
+    { path: '/session-recordings', label: 'Session Recordings', icon: '📹' },
+    { path: '/session-management', label: 'Session Management', icon: '⚙️' },
+    { path: '/notifications', label: 'Notifications', icon: '📢' },
+  ];
+
   return (
     <>
       {isOpen && (
@@ -19,7 +29,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
         />
       )}
 
-      {/* Sidebar - Strictly defined for mobile & desktop layouts */}
+      {/* Sidebar Layout */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-[#E0F2FE] z-50 transform transition-transform duration-300 ease-in-out md:translate-x-0 border-r border-blue-200/50 flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -34,23 +44,17 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
           <button onClick={toggleMobileMenu} className="md:hidden p-2 text-blue-500">✕</button>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Item List */}
         <nav className="flex-1 overflow-y-auto px-3.5 py-5 space-y-1.5">
           <div className="mb-2.5 px-2.5 text-[10px] font-bold uppercase tracking-widest text-blue-500/80">
             Workspace
           </div>
           
-          {[
-            { path: '/', label: 'Dashboard', icon: '📊' },
-            { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
-            { path: '/attendance', label: 'Attendance', icon: '📋' }, // <-- Added the new Attendance route link
-            { path: '/session-recordings', label: 'Session Recordings', icon: '📹' },
-            { path: '/session-management', label: 'Session Management', icon: '⚙️' },
-          ].map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.path}
               onClick={() => handleNavigation(item.path)}
-              className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold transition-all ${
+              className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-semibold transition-all cursor-pointer ${
                 location.pathname === item.path 
                   ? 'bg-blue-600 text-white shadow-sm' 
                   : 'text-blue-700 hover:bg-blue-200/60'
