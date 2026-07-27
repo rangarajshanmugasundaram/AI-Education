@@ -23,4 +23,9 @@ export const API_ENDPOINTS = {
     ALL: '/api/notifications/',
     CREATE: '/api/notifications/create/',
   },
+  FEEDBACK: {
+    SUBMIT: '/api/feedback/submit/',
+    SESSION: (sessionId) => `/api/feedback/session/${sessionId}/`,
+    TRAINER: (trainerId) => `/api/feedback/trainer/${trainerId}/`,
+  }
 };

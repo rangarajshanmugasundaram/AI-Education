@@ -1,16 +1,22 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateLiveSessionButton from '../components/CreateLiveSessionButton';
 import UploadRecordingModal from '../components/UploadRecordingModal'; 
+import feedbackService from '../../../services/features/feedbackService';
 
 export default function TrainerDashboard() {
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
 
   const [sessions, setSessions] = useState([
-    { id: 'sess-abc1', batchName: 'Full Stack JavaScript - Batch A', dateTime: '2026-07-10 at 10:00', notified: true },
-    { id: 'sess-xyz2', batchName: 'UI/UX Design Masterclass - Evening', dateTime: '2026-07-15 at 18:30', notified: false }
+    { id: 'session_101', batchName: 'Full Stack JavaScript - Batch A', dateTime: '2026-07-27 at 10:00', notified: true },
+    { id: 'sess-xyz2', batchName: 'UI/UX Design Masterclass - Evening', dateTime: '2026-07-28 at 18:30', notified: false }
   ]);
+
+  const [feedbackData, setFeedbackData] = useState({
+    metrics: { overall_rating: 0, total_reviews: 0, distribution: {} },
+    results: []
+  });
 
   const [recordings, setRecordings] = useState([
     {
@@ -42,8 +48,26 @@ export default function TrainerDashboard() {
     }
   ];
 
+  // Fetch Trainer Feedback Analytics on mount
+  useEffect(() => {
+    const fetchFeedback = async () => {
+      try {
+        const trainerEmail = localStorage.getItem('user_email') || 'trainer1@gmail.com';
+        const data = await feedbackService.getTrainerFeedback(trainerEmail);
+        if (data && data.metrics) {
+          setFeedbackData(data);
+        }
+      } catch (err) {
+        console.error('Failed to load trainer feedback:', err);
+      }
+    };
+    fetchFeedback();
+  }, []);
+
   const handleSessionCreated = useCallback((newSession) => {
     setSessions((prev) => [newSession, ...prev]);
+    // Save active live session to localStorage for DigitalClassroom listener
+    localStorage.setItem('active_live_session', JSON.stringify({ id: newSession.id, isLive: true }));
   }, []);
 
   const handleAddRecording = useCallback((newRecording) => {
@@ -56,6 +80,7 @@ export default function TrainerDashboard() {
   };
 
   const handleStartSession = (sessionId) => {
+    localStorage.setItem('active_live_session', JSON.stringify({ id: sessionId, isLive: true }));
     navigate(`/live-session/${sessionId}`);
   };
 
@@ -63,7 +88,7 @@ export default function TrainerDashboard() {
     <>
       <div className="w-full flex flex-col gap-5 sm:gap-6 max-w-[1600px] mx-auto bg-slate-50/30 min-h-screen">
         
-        {/* Hub Header Block (Clean Header without backdrop blur) */}
+        {/* Hub Header Block */}
         <header className="w-full bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm sticky top-0 z-10000 transition-all">
           <div className="space-y-1 text-center sm:text-left">
             <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
@@ -83,7 +108,6 @@ export default function TrainerDashboard() {
               <span className="text-sm font-medium">+</span> Upload Recording
             </button>
             
-            {/* Modular Independent Component */}
             <CreateLiveSessionButton onSessionCreated={handleSessionCreated} />
           </div>
         </header>
@@ -91,7 +115,6 @@ export default function TrainerDashboard() {
         {/* Dashboard Panels Layout */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
-          {/* Main Informational Flow Columns */}
           <main className="w-full lg:col-span-3 flex flex-col gap-6 order-1">
             
             {/* Live Lecture Segments */}
@@ -143,7 +166,46 @@ export default function TrainerDashboard() {
               </div>
             </section>
 
-            {/* Smart Lesson Notes & Summary Aggregates */}
+            {/* 🌟 STUDENT FEEDBACK & RATING ANALYTICS WIDGET */}
+            <section className="flex flex-col gap-3">
+              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
+                Student Feedback & Ratings
+              </h2>
+              <div className="w-full bg-white border border-slate-200/70 rounded-2xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Score Summary Box */}
+                <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+                  <span className="text-4xl font-black text-indigo-700">
+                    ⭐ {feedbackData.metrics.overall_rating || '5.0'}
+                  </span>
+                  <span className="text-xs font-bold text-indigo-900 mt-1.5">Average Session Rating</span>
+                  <span className="text-[10px] text-indigo-600 mt-0.5">Based on {feedbackData.metrics.total_reviews} student reviews</span>
+                </div>
+
+                {/* Reviews Stream */}
+                <div className="md:col-span-2 space-y-3 max-h-56 overflow-y-auto pr-1">
+                  {feedbackData.results.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-center p-6 text-slate-400 text-xs">
+                      No student feedback recorded yet. Ratings will appear here once live classes complete.
+                    </div>
+                  ) : (
+                    feedbackData.results.map((rev) => (
+                      <div key={rev.id || rev.created_at} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-800">{rev.student_id}</span>
+                          <span className="text-xs text-amber-500 font-bold">{"★".repeat(rev.rating)}</span>
+                        </div>
+                        {rev.review && <p className="text-xs text-slate-600">{rev.review}</p>}
+                        <span className="text-[9px] text-indigo-600 font-bold uppercase tracking-wider mt-1">{rev.tags}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+              </div>
+            </section>
+
+            {/* Lesson Notes & Summaries */}
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
                 Stored Session Notes & AI Insights
@@ -175,45 +237,6 @@ export default function TrainerDashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </section>
-
-            {/* Local Video Repository Blocks */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-                Classroom Recordings Repository ({recordings.length})
-              </h2>
-              <div className="w-full bg-white border border-slate-200/70 rounded-2xl p-5 shadow-sm">
-                {recordings.length === 0 ? (
-                  <div className="w-full flex flex-col items-center justify-center text-center py-12">
-                    <span className="text-3xl mb-2">📹</span>
-                    <h4 className="text-xs font-bold text-slate-700">No session recordings compiled yet</h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Use the button on the top right to start archiving files.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {recordings.map((rec) => (
-                      <div key={rec.id} className="border border-slate-200/60 hover:border-slate-300 rounded-xl p-4 bg-slate-50/40 flex flex-col gap-3 transition-all">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-bold bg-slate-200/80 text-slate-700 rounded px-1.5 py-0.5 w-max uppercase tracking-wide mb-2">
-                            {rec.duration}
-                          </span>
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-2 leading-snug">
-                            {rec.title}
-                          </h4>
-                          <p className="text-[11px] text-slate-400 font-semibold mt-1">
-                            {rec.session}
-                          </p>
-                        </div>
-
-                        <div className="pt-2.5 border-t border-slate-200/60 mt-auto flex justify-between items-center text-[10px] text-slate-400 font-medium">
-                          <span className="truncate max-w-xs-file font-mono text-slate-400/90">💾 {rec.fileName}</span>
-                          <span>{rec.uploadedAt}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}  
               </div>
             </section>
 

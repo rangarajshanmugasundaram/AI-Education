@@ -13,6 +13,7 @@ import { ParticipantList } from '../components/liveClassroom/ParticipantList';
 import { RaiseHandList } from '../components/liveClassroom/RaiseHandList';
 import { WaitingRoomModal } from '../components/liveClassroom/WaitingRoomModal';
 import { ActivityLogDrawer } from '../components/liveClassroom/ActivityLogDrawer';
+import FeedbackModal from '../components/liveClassroom/FeedbackModal';
 
 const MemoizedWhiteboard = memo(WhiteboardZone);
 const MemoizedChat = memo(ClassroomChat);
@@ -26,11 +27,14 @@ export function LiveClassroomPage() {
   const sessionId = rawSessionId && rawSessionId !== 'undefined' ? rawSessionId : 'session_101';
 
   // Mode & Sidebar States
-  const [viewMode, setViewMode] = useState('whiteboard'); // 'whiteboard' | 'camera'
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'participants' | 'hands'
+  const [viewMode, setViewMode] = useState('whiteboard');
+  const [activeTab, setActiveTab] = useState('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isWaitingRoomOpen, setIsWaitingRoomOpen] = useState(false);
   const [isLogDrawerOpen, setIsLogDrawerOpen] = useState(false);
+
+  // 🌟 Feedback Modal State
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   // Current User
   const currentUser = {
@@ -52,7 +56,6 @@ export function LiveClassroomPage() {
     raiseHand,
     lowerHand,
     dismissHand,
-    startSession,
     endSession,
     toggleLock,
     muteAll,
@@ -68,15 +71,9 @@ export function LiveClassroomPage() {
   } = useLiveClassroom(sessionId);
 
   useEffect(() => {
-    if (searchParams.get('email')) {
-      localStorage.setItem('user_email', searchParams.get('email'));
-    }
-    if (searchParams.get('role')) {
-      localStorage.setItem('user_role', searchParams.get('role'));
-    }
-    if (searchParams.get('name')) {
-      localStorage.setItem('user_name', searchParams.get('name'));
-    }
+    if (searchParams.get('email')) localStorage.setItem('user_email', searchParams.get('email'));
+    if (searchParams.get('role')) localStorage.setItem('user_role', searchParams.get('role'));
+    if (searchParams.get('name')) localStorage.setItem('user_name', searchParams.get('name'));
   }, [searchParams]);
 
   const studentParticipants = participants.filter((p) => p.role !== 'Trainer');
@@ -89,6 +86,19 @@ export function LiveClassroomPage() {
   const currentParticipant = participants.find((p) => p.email === currentUser.email);
   const isSelfMuted = currentParticipant ? (currentParticipant.isMuted || currentParticipant.is_muted) : false;
   const isSelfCameraOn = currentParticipant ? (currentParticipant.isCameraOn ?? currentParticipant.is_camera_on ?? true) : true;
+
+  // 🌟 Handles Leaving or Ending the Class
+  const handleEndOrLeaveMeeting = () => {
+    if (currentUser.role.toLowerCase() === 'student') {
+      // Show feedback modal to Student
+      setIsFeedbackModalOpen(true);
+    } else {
+      // Trainer ends meeting for all
+      endSession();
+      localStorage.removeItem('active_live_session');
+      navigate('/digital-classroom');
+    }
+  };
 
   return (
     <div style={{ zIndex: 9999 }} className="fixed inset-0 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden select-none">
@@ -214,9 +224,7 @@ export function LiveClassroomPage() {
             </div>
 
             <div className="w-full flex-1 flex flex-col overflow-hidden p-2 bg-white text-slate-800">
-              {activeTab === 'chat' && (
-                <MemoizedChat sessionId={sessionId} currentUser={currentUser} />
-              )}
+              {activeTab === 'chat' && <MemoizedChat sessionId={sessionId} currentUser={currentUser} />}
 
               {activeTab === 'participants' && (
                 <ParticipantList
@@ -246,8 +254,6 @@ export function LiveClassroomPage() {
 
       {/* 🎛️ BOTTOM CONTROL TOOLBAR */}
       <footer className="w-full h-14 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between shrink-0">
-        
-        {/* Left Side Metadata */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-mono font-bold text-slate-400">Room: {sessionId}</span>
           <span className="text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded-full border border-slate-700">
@@ -255,7 +261,6 @@ export function LiveClassroomPage() {
           </span>
         </div>
 
-        {/* Center Controls */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -300,7 +305,7 @@ export function LiveClassroomPage() {
                 onClick={muteAll}
                 className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
               >
-                 Mute All
+                Mute All
               </button>
 
               <button
@@ -315,19 +320,16 @@ export function LiveClassroomPage() {
             </>
           )}
 
+          {/* 📞 LEAVE / END MEETING BUTTON */}
           <button
             type="button"
-            onClick={() => {
-              endSession();
-              navigate(-1);
-            }}
+            onClick={handleEndOrLeaveMeeting}
             className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition cursor-pointer shadow ml-2"
           >
-            📞 End Meeting
+            📞 {currentUser.role.toLowerCase() === 'student' ? 'Leave Meeting' : 'End Meeting'}
           </button>
         </div>
 
-        {/* Right Side Options */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -379,6 +381,21 @@ export function LiveClassroomPage() {
           onClose={() => setIsLogDrawerOpen(false)}
         />
       )}
+
+      {/* 🌟 STUDENT FEEDBACK POPUP MODAL */}
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        sessionId={sessionId}
+        trainerId="trainer_01"
+        currentUser={currentUser}
+        onClose={() => {
+          setIsFeedbackModalOpen(false);
+          navigate('/digital-classroom');
+        }}
+        onSuccess={() => {
+          navigate('/digital-classroom');
+        }}
+      />
     </div>
   );
 }

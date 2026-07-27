@@ -14,22 +14,10 @@ axiosInstance.interceptors.request.use(
     const paramEmail = searchParams.get('email');
     const paramRole = searchParams.get('role');
 
-    if (paramEmail) {
-      localStorage.setItem('user_email', paramEmail);
-    }
-    if (paramRole) {
-      localStorage.setItem('user_role', paramRole);
-    }
+    if (paramEmail) localStorage.setItem('user_email', paramEmail);
+    if (paramRole) localStorage.setItem('user_role', paramRole);
 
-    // Retrieve live token and user details from Local Storage
-    const token = localStorage.getItem('token');
     const email = localStorage.getItem('user_email');
-
-    // Attach Authorization header ONLY if a real token exists
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-
     if (email) {
       config.headers['X-User-Email'] = email.trim().toLowerCase();
     }

@@ -1,39 +1,57 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import axiosInstance from '../../../services/api/axiosSetup'; // Adjust path if needed to point to your axios instance
+import axiosInstance from '../../../services/api/axiosSetup';
 
 export default function ClassroomChat({ sessionId = 'session_101' }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const messagesContainerRef = useRef(null);
 
   const getUserRole = () => localStorage.getItem('user_role') || 'Student';
   const getUserEmail = () => localStorage.getItem('user_email') || '';
 
-  // Fetch Chat History using configured Axios Instance
+  // 🔑 Helper to reliably retrieve stored JWT token across key variations
+  const getAuthToken = () => {
+    return (
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('jwt')
+    );
+  };
+
+  // Fetch Chat History
   const fetchChatHistory = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    
+    const token = getAuthToken();
+
     if (!token) {
       setError('Authentication token missing. Please log in.');
       setIsLoading(false);
-      return false; // Return false to indicate failure & stop polling
+      return false; // Stop polling
     }
 
     try {
-      const response = await axiosInstance.get(`/api/chat/session/${sessionId}`);
+      // 🌟 Explicitly attach Authorization header as fail-safe
+      const response = await axiosInstance.get(`/api/chat/session/${sessionId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
       const data = response.data || [];
-      
-      const formattedMessages = (Array.isArray(data) ? data : []).map(msg => ({
+
+      const formattedMessages = (Array.isArray(data) ? data : []).map((msg) => ({
         id: msg.message_id || msg.id,
         sender: msg.sender_name || msg.sender_id || 'User',
         text: msg.message,
-        timestamp: msg.timestamp 
+        timestamp: msg.timestamp
           ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           : 'Just now',
-        isAdmin: (msg.sender_name || '').toLowerCase().includes('trainer') || msg.message_type === 'System'
+        isAdmin:
+          (msg.sender_role || '').toLowerCase().includes('trainer') ||
+          (msg.sender_name || '').toLowerCase().includes('trainer') ||
+          msg.message_type === 'System'
       }));
 
       setMessages(formattedMessages);
@@ -45,7 +63,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
       if (status === 401) {
         setError('Session expired or unauthorized. Please log in again.');
       } else {
-        setError(err.response?.data?.error || 'Failed to sync chat messages.');
+        setError(err.response?.data?.error || err.response?.data?.detail || 'Failed to sync chat messages.');
       }
       return false; // Stop polling on error
     } finally {
@@ -53,14 +71,13 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     }
   }, [sessionId]);
 
-  // Safe Polling Cycle (Auto-stops if unauthenticated)
+  // Safe Polling Cycle
   useEffect(() => {
     let isMounted = true;
-    
+
     const runPolling = async () => {
       const success = await fetchChatHistory();
       if (!success && isMounted) {
-        // Stop polling if request failed with auth error
         clearInterval(pollInterval);
       }
     };
@@ -74,7 +91,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     };
   }, [fetchChatHistory]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -82,44 +99,65 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
   }, [messages]);
 
   // Send Message
-  const handleSendMessage = useCallback(async (e) => {
-    e.preventDefault();
-    const cleanInput = inputValue.trim();
-    if (!cleanInput) return;
+  const handleSendMessage = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const cleanInput = inputValue.trim();
+      if (!cleanInput) return;
 
-    setInputValue('');
+      const token = getAuthToken();
+      if (!token) {
+        alert('Cannot send message: Authentication token missing.');
+        return;
+      }
 
-    try {
-      await axiosInstance.post('/api/chat/send', {
-        session_id: sessionId,
-        message: cleanInput,
-        message_type: 'Text'
-      });
+      setInputValue('');
 
-      fetchChatHistory();
-    } catch (err) {
-      alert(`Message delivery failed: ${err.response?.data?.error || err.message}`);
-      setInputValue(cleanInput); 
-    }
-  }, [inputValue, sessionId, fetchChatHistory]);
+      try {
+        await axiosInstance.post(
+          '/api/chat/send',
+          {
+            session_id: sessionId,
+            message: cleanInput,
+            message_type: 'Text'
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        fetchChatHistory();
+      } catch (err) {
+        alert(`Message delivery failed: ${err.response?.data?.detail || err.response?.data?.error || err.message}`);
+        setInputValue(cleanInput);
+      }
+    },
+    [inputValue, sessionId, fetchChatHistory]
+  );
 
   // Delete Message
   const handleDeleteMessage = async (messageId) => {
-    if (!window.confirm("Are you sure you want to delete this message?")) return;
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
 
+    const token = getAuthToken();
     try {
-      await axiosInstance.delete(`/api/chat/${messageId}`);
-      setMessages((prev) => prev.filter(msg => msg.id !== messageId));
+      await axiosInstance.delete(`/api/chat/${messageId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete message.');
+      alert(err.response?.data?.detail || err.response?.data?.error || 'Failed to delete message.');
     }
   };
 
   return (
     <div className="flex flex-col w-full h-full min-h-0 bg-white overflow-hidden">
-      
       {/* Messages Feed Viewport */}
-      <div 
+      <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50"
       >
@@ -135,32 +173,39 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
             const isMe = (msg.sender || '').toLowerCase().includes('trainer') || msg.sender === currentEmail;
 
             return (
-              <div 
-                key={msg.id} 
+              <div
+                key={msg.id}
                 className={`flex flex-col max-w-[85%] ${!isMe ? 'mr-auto items-start' : 'ml-auto items-end'}`}
               >
                 <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase mb-1 px-1">
-                  {msg.sender} <span className="mx-1 font-normal text-slate-300">•</span> <span className="font-medium lowercase">{msg.timestamp}</span>
+                  {msg.sender} <span className="mx-1 font-normal text-slate-300">•</span>{' '}
+                  <span className="font-medium lowercase">{msg.timestamp}</span>
                   {msg.isAdmin && <span className="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1 rounded">Staff</span>}
                 </span>
-                
+
                 <div className="group flex items-center gap-2">
-                  <div className={`p-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm tracking-wide ${
-                    !isMe 
-                      ? 'bg-white text-slate-800 rounded-tl-none border border-slate-200/60' 
-                      : 'bg-blue-600 text-white rounded-tr-none font-medium'
-                  }`}>
+                  <div
+                    className={`p-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm tracking-wide ${
+                      !isMe
+                        ? 'bg-white text-slate-800 rounded-tl-none border border-slate-200/60'
+                        : 'bg-blue-600 text-white rounded-tr-none font-medium'
+                    }`}
+                  >
                     {msg.text}
                   </div>
 
                   {getUserRole().toLowerCase() === 'trainer' && (
-                    <button 
+                    <button
                       onClick={() => handleDeleteMessage(msg.id)}
                       className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-full bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 shadow-sm transition-all duration-150 shrink-0 cursor-pointer"
                       title="Delete message"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
                       </svg>
                     </button>
                   )}
@@ -172,10 +217,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
       </div>
 
       {/* Input Form Box */}
-      <form 
-        onSubmit={handleSendMessage} 
-        className="p-3 border-t border-slate-100 bg-white shrink-0"
-      >
+      <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 bg-white shrink-0">
         <div className="flex gap-2 items-center bg-slate-50 border border-slate-200 rounded-xl p-1 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:border-blue-500 focus-within:bg-white transition-all duration-200">
           <input
             type="text"
@@ -193,7 +235,6 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
           </button>
         </div>
       </form>
-      
     </div>
   );
 }
