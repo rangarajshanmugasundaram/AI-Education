@@ -64,7 +64,7 @@ export const CreateSessionModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/70 p-4 animate-fade-in">
+    <div  style={{ zIndex: 9999 }} className="fixed inset-0  flex items-center justify-center bg-slate-950/70 p-4 animate-fade-in">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
         
         {/* Modal Header */}

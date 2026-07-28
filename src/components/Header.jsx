@@ -57,9 +57,8 @@ const Header = ({ toggleSidebar }) => {
 
   return (
     <header 
-      style={{ zIndex: 19 }}
-      className="sticky top-0 flex h-17.5 w-full items-center justify-between border-b border-blue-100 bg-[#F0F9FF] px-6 transition-colors duration-200"
-    >
+  className="sticky top-0 z-30 flex h-17.5 w-full items-center justify-between border-b border-blue-100 bg-[#F0F9FF] px-6 transition-colors duration-200"
+>
       {/* Left Block - Dynamic Title */}
       <div className="flex items-center gap-4">
         <button 

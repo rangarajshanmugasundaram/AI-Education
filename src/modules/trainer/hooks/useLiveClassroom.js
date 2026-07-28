@@ -5,6 +5,7 @@ import { useLiveClassroomSocket } from './useLiveClassroomSocket';
 export const useLiveClassroom = (sessionId) => {
   const {
     isConnected,
+    isReconnecting,
     participants: socketParticipants,
     raisedHands: socketRaisedHands,
     waitingRoom: socketWaitingRoom,
@@ -32,6 +33,29 @@ export const useLiveClassroom = (sessionId) => {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 2500);
   };
+
+  // 🌟 RESTORE FULL SESSION STATE ON TRAINER RECONNECT
+  const restoreFullState = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      const res = await classroomService.getRecoveryState(sessionId);
+      const data = res.data || res;
+      if (data) {
+        if (data.session) {
+          setSessionState({
+            isLive: data.session.is_live ?? true,
+            isLocked: data.session.is_locked ?? false,
+            allowUnmute: data.session.allow_unmute ?? true,
+          });
+        }
+        if (data.participants) setParticipants(data.participants);
+        if (data.waiting_room) setWaitingRoom(data.waiting_room);
+        if (data.activity_logs) setActivityLogs(data.activity_logs);
+      }
+    } catch (err) {
+      console.error('Error restoring recovery state:', err);
+    }
+  }, [sessionId]);
 
   const fetchClassroomData = useCallback(async () => {
     if (!sessionId) return;
@@ -62,7 +86,7 @@ export const useLiveClassroom = (sessionId) => {
     if (socketSessionState) setSessionState((prev) => ({ ...prev, ...socketSessionState }));
   }, [socketParticipants, socketWaitingRoom, socketActivityLogs, socketNotifications, socketSessionState]);
 
-  // REST API Handlers
+  // REST API Actions
   const raiseHand = async (email) => {
     try {
       await classroomService.raiseHand(sessionId, email);
@@ -139,7 +163,6 @@ export const useLiveClassroom = (sessionId) => {
     }
   };
 
-  // ✅ FIXED: Optimistic state update supporting both key formats + No racing GET fetch
   const muteAll = async () => {
     try {
       setParticipants((prev) =>
@@ -238,6 +261,7 @@ export const useLiveClassroom = (sessionId) => {
 
   return {
     isConnected,
+    isReconnecting,
     sessionState,
     searchTerm,
     setSearchTerm,
@@ -263,6 +287,7 @@ export const useLiveClassroom = (sessionId) => {
     updatePermissions,
     approveWaiting,
     rejectWaiting,
+    restoreFullState,
   };
 };
 

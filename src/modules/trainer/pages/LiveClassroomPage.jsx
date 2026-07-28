@@ -14,6 +14,7 @@ import { RaiseHandList } from '../components/liveClassroom/RaiseHandList';
 import { WaitingRoomModal } from '../components/liveClassroom/WaitingRoomModal';
 import { ActivityLogDrawer } from '../components/liveClassroom/ActivityLogDrawer';
 import FeedbackModal from '../components/liveClassroom/FeedbackModal';
+import ReconnectOverlay from '../components/liveClassroom/ReconnectOverlay';
 
 const MemoizedWhiteboard = memo(WhiteboardZone);
 const MemoizedChat = memo(ClassroomChat);
@@ -22,7 +23,6 @@ export function LiveClassroomPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // 🔒 HARDCODED WORKING SESSION ID
   const { sessionId: rawSessionId } = useParams();
   const sessionId = rawSessionId && rawSessionId !== 'undefined' ? rawSessionId : 'session_101';
 
@@ -32,8 +32,6 @@ export function LiveClassroomPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isWaitingRoomOpen, setIsWaitingRoomOpen] = useState(false);
   const [isLogDrawerOpen, setIsLogDrawerOpen] = useState(false);
-
-  // 🌟 Feedback Modal State
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   // Current User
@@ -47,6 +45,7 @@ export function LiveClassroomPage() {
   // Consume Live Backend Engine
   const {
     sessionState,
+    isReconnecting,
     participants = [],
     raisedHands = [],
     waitingRoom = [],
@@ -87,13 +86,10 @@ export function LiveClassroomPage() {
   const isSelfMuted = currentParticipant ? (currentParticipant.isMuted || currentParticipant.is_muted) : false;
   const isSelfCameraOn = currentParticipant ? (currentParticipant.isCameraOn ?? currentParticipant.is_camera_on ?? true) : true;
 
-  // 🌟 Handles Leaving or Ending the Class
   const handleEndOrLeaveMeeting = () => {
     if (currentUser.role.toLowerCase() === 'student') {
-      // Show feedback modal to Student
       setIsFeedbackModalOpen(true);
     } else {
-      // Trainer ends meeting for all
       endSession();
       localStorage.removeItem('active_live_session');
       navigate('/digital-classroom');
@@ -103,11 +99,18 @@ export function LiveClassroomPage() {
   return (
     <div style={{ zIndex: 9999 }} className="fixed inset-0 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden select-none">
       
+      {/* 🌟 RECONNECT OVERLAY BANNER */}
+      <ReconnectOverlay
+        isReconnecting={isReconnecting}
+        role={currentUser.role}
+        timeoutSeconds={120}
+      />
+
       {/* 🔔 Toast Notifications */}
       <div style={{ zIndex: 10000 }} className="fixed top-4 left-4 flex flex-col gap-2 max-w-xs pointer-events-none">
-        {notifications.map((n) => (
+        {notifications.map((n, index) => (
           <div
-            key={n.id}
+            key={`${n.id || index}-${index}`}
             onClick={() => setNotifications((prev) => prev.filter((item) => item.id !== n.id))}
             className="pointer-events-auto bg-slate-900/90 backdrop-blur-md text-white text-xs px-3 py-2 rounded-lg shadow-xl border border-indigo-500/40 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-800 transition"
           >
@@ -320,7 +323,6 @@ export function LiveClassroomPage() {
             </>
           )}
 
-          {/* 📞 LEAVE / END MEETING BUTTON */}
           <button
             type="button"
             onClick={handleEndOrLeaveMeeting}
@@ -365,7 +367,7 @@ export function LiveClassroomPage() {
         </div>
       </footer>
 
-      {/* Task Overlays */}
+      {/* Overlays */}
       {isWaitingRoomOpen && (
         <WaitingRoomModal
           waitingList={waitingRoom}
@@ -382,11 +384,10 @@ export function LiveClassroomPage() {
         />
       )}
 
-      {/* 🌟 STUDENT FEEDBACK POPUP MODAL */}
       <FeedbackModal
         isOpen={isFeedbackModalOpen}
         sessionId={sessionId}
-        trainerId="trainer_01"
+        trainerId="trainer1@gmail.com"
         currentUser={currentUser}
         onClose={() => {
           setIsFeedbackModalOpen(false);
