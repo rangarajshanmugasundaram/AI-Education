@@ -9,13 +9,29 @@ export function CreateNotificationModal({ isOpen, onClose, onSubmit }) {
     batch_id: '',
     priority: 'Medium',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+      onClose();
+      setFormData({
+        title: '',
+        message: '',
+        recipient_type: 'All',
+        recipient_id: '',
+        batch_id: '',
+        priority: 'Medium',
+      });
+    } catch (err) {
+      console.error('Failed to submit notification:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -27,6 +43,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSubmit }) {
             📢 Create Notification
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 font-bold text-base cursor-pointer p-1"
           >
@@ -92,6 +109,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSubmit }) {
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
+                <option value="Emergency">Emergency</option>
               </select>
             </div>
           </div>
@@ -133,15 +151,17 @@ export function CreateNotificationModal({ isOpen, onClose, onSubmit }) {
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="px-4 py-2 bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/10 transition cursor-pointer"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/10 transition cursor-pointer disabled:opacity-50"
             >
-              Send Notification
+              {isSubmitting ? 'Sending...' : 'Send Notification'}
             </button>
           </div>
         </form>
@@ -149,3 +169,5 @@ export function CreateNotificationModal({ isOpen, onClose, onSubmit }) {
     </div>
   );
 }
+
+export default CreateNotificationModal;

@@ -50,7 +50,6 @@ export default function AttendanceDashboard() {
 
   const containerRef = useRef(null);
 
-  // Passive ResizeObserver for responsive table/card switching
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ResizeObserver) return;
 
@@ -70,7 +69,8 @@ export default function AttendanceDashboard() {
 
   const fetchAttendanceReport = useCallback(async (sessionId) => {
     try {
-      const response = await axiosInstance.get(`/api/attendance/report/${sessionId}`);
+      const target = sessionId || 'all';
+      const response = await axiosInstance.get(`/api/attendance/report/${target}/`);
       const reportResponse = response.data || {};
       if (reportResponse && reportResponse.metrics) {
         setReportMetrics({
@@ -83,11 +83,10 @@ export default function AttendanceDashboard() {
         });
       }
     } catch (err) {
-      console.error("Analytical report fetch latency:", err);
+      console.error("Analytical report fetch error:", err);
     }
   }, []);
 
-  // Primary API fetch cycle
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -95,8 +94,8 @@ export default function AttendanceDashboard() {
       const targetSession = filters.session || 'all';
       
       const [recordsRes, reportRes] = await Promise.allSettled([
-        axiosInstance.get(`/api/attendance/session/${targetSession}`),
-        axiosInstance.get(`/api/attendance/report/${targetSession}`)
+        axiosInstance.get(`/api/attendance/session/${targetSession}/`),
+        axiosInstance.get(`/api/attendance/report/${targetSession}/`)
       ]);
 
       const recordsData = recordsRes.status === 'fulfilled' ? recordsRes.value.data : {};
@@ -136,7 +135,7 @@ export default function AttendanceDashboard() {
 
   const handleUpdateStatus = async (userId, sessionId, newStatus) => {
     try {
-      await axiosInstance.put('/api/attendance/update', {
+      await axiosInstance.put('/api/attendance/update/', {
         user_id: userId,
         session_id: sessionId,
         status: newStatus
@@ -153,7 +152,6 @@ export default function AttendanceDashboard() {
     }
   };
 
-  // Memoized search and filter results
   const filteredRecords = useMemo(() => {
     const query = (filters.searchQuery || '').toLowerCase().trim();
     return records.filter(rec => {
@@ -218,7 +216,7 @@ export default function AttendanceDashboard() {
             <button 
               onClick={handleExportCSV}
               disabled={loading || filteredRecords.length === 0}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer"
             >
               📥 Export Report (.CSV)
             </button>
@@ -231,7 +229,6 @@ export default function AttendanceDashboard() {
           </div>
         </div>
 
-        {/* Stats Row */}
         <div style={{ minHeight: '110px' }} className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
           <AttendanceStatsCard 
             title={filters.session === 'all' ? "Total Logs" : "Total Students"} 
@@ -265,7 +262,6 @@ export default function AttendanceDashboard() {
           />
         </div>
 
-        {/* Average Class Stay Banner */}
         <div style={{ minHeight: '78px' }} className={`bg-white border border-gray-100 shadow-sm rounded-2xl p-4 mb-6 flex items-center justify-between transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="flex items-center gap-3">
             <span className="text-xl">⏱️</span>

@@ -28,6 +28,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   // Student navigation links
   const studentNavItems = [
     { path: '/digital-classroom', label: 'Digital Classroom', icon: '🏫' },
+    { path: '/session-recordings', label: 'Session Recordings', icon: '📹' },
     { path: '/notifications-inbox', label: 'Notifications', icon: '🔔' },
   ];
 

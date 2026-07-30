@@ -12,7 +12,6 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
   const getUserRole = () => localStorage.getItem('user_role') || 'Student';
   const getUserEmail = () => localStorage.getItem('user_email') || '';
 
-  // 🔑 Helper to reliably retrieve stored JWT token across key variations
   const getAuthToken = () => {
     return (
       localStorage.getItem('access_token') ||
@@ -25,20 +24,13 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
   const fetchChatHistory = useCallback(async () => {
     const token = getAuthToken();
 
-    if (!token) {
-      setError('Authentication token missing. Please log in.');
-      setIsLoading(false);
-      return false; // Stop polling
-    }
-
     try {
-      // 🌟 Explicitly attach Authorization header as fail-safe
-      const response = await axiosInstance.get(`/api/chat/session/${sessionId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
+      const response = await axiosInstance.get(`/api/chat/session/${sessionId}/`, { headers });
       const data = response.data || [];
 
       const formattedMessages = (Array.isArray(data) ? data : []).map((msg) => ({
@@ -61,11 +53,11 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
       console.error('Chat Sync Error:', err);
       const status = err.response?.status;
       if (status === 401) {
-        setError('Session expired or unauthorized. Please log in again.');
+        setError('Session unauthorized. Please log in again.');
       } else {
         setError(err.response?.data?.error || err.response?.data?.detail || 'Failed to sync chat messages.');
       }
-      return false; // Stop polling on error
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +83,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
     };
   }, [fetchChatHistory]);
 
-  // Scroll to bottom
+  // Auto-scroll to bottom
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -106,26 +98,22 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
       if (!cleanInput) return;
 
       const token = getAuthToken();
-      if (!token) {
-        alert('Cannot send message: Authentication token missing.');
-        return;
-      }
-
       setInputValue('');
 
       try {
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         await axiosInstance.post(
-          '/api/chat/send',
+          '/api/chat/send/',
           {
             session_id: sessionId,
             message: cleanInput,
             message_type: 'Text'
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
+          { headers }
         );
 
         fetchChatHistory();
@@ -143,11 +131,12 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
 
     const token = getAuthToken();
     try {
-      await axiosInstance.delete(`/api/chat/${messageId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      await axiosInstance.delete(`/api/chat/${messageId}/`, { headers });
       setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
     } catch (err) {
       alert(err.response?.data?.detail || err.response?.data?.error || 'Failed to delete message.');
@@ -156,7 +145,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
 
   return (
     <div className="flex flex-col w-full h-full min-h-0 bg-white overflow-hidden">
-      {/* Messages Feed Viewport */}
+      {/* Messages Feed */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50"
@@ -216,7 +205,7 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
         )}
       </div>
 
-      {/* Input Form Box */}
+      {/* Input Box */}
       <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 bg-white shrink-0">
         <div className="flex gap-2 items-center bg-slate-50 border border-slate-200 rounded-xl p-1 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:border-blue-500 focus-within:bg-white transition-all duration-200">
           <input

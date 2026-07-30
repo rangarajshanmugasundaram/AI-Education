@@ -58,8 +58,9 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      {/* RECORDINGS ACCESSIBLE TO BOTH TRAINERS AND STUDENTS */}
       <Route path="/session-recordings" element={ 
-        <ProtectedRoute allowedRoles={[ROLES.TRAINER, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
           <AppLayout><SessionRecordings /></AppLayout>
         </ProtectedRoute>
       } />

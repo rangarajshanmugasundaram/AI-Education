@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import notificationService from '../../../services/features/notificationService';
+import websocketService from '../../../services/features/websocketService';
 
 export const useNotifications = (isStudent = false) => {
   const [notifications, setNotifications] = useState([]);
@@ -12,7 +13,7 @@ export const useNotifications = (isStudent = false) => {
   const [recipientType, setRecipientType] = useState('');
   const [readStatus, setReadStatus] = useState('');
 
-  // Fetch Notifications from API
+  // Fetch Notifications from REST API
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -30,13 +31,12 @@ export const useNotifications = (isStudent = false) => {
         response = await notificationService.getAll(params);
       }
 
-      // Safely extract data whether returned as response.data or raw array
       const list = Array.isArray(response) ? response : response?.data || [];
       setNotifications(list);
     } catch (err) {
       console.error('Error fetching notifications:', err);
       setError(err.response?.data?.error || 'Failed to load notifications');
-      setNotifications([]); // Prevent mock fallback
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -45,6 +45,28 @@ export const useNotifications = (isStudent = false) => {
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  // 🌟 REAL-TIME WEBSOCKET LISTENER FOR NEW BROADCAST ALERTS
+  useEffect(() => {
+    const handleNewNotification = (payload) => {
+      if (!payload) return;
+      
+      const newNotification = payload.payload || payload;
+      
+      // Append new notification to top of list instantly
+      setNotifications((prev) => {
+        const exists = prev.some((n) => n.id === newNotification.id);
+        if (exists) return prev;
+        return [newNotification, ...prev];
+      });
+    };
+
+    websocketService.on('NEW_NOTIFICATION', handleNewNotification);
+
+    return () => {
+      websocketService.off('NEW_NOTIFICATION', handleNewNotification);
+    };
+  }, []);
 
   // POST /api/notifications/
   const createNotification = async (formData) => {
@@ -102,7 +124,7 @@ export const useNotifications = (isStudent = false) => {
   const stats = {
     total: notifications.length,
     unread: notifications.filter((n) => !n.read_status).length,
-    highPriority: notifications.filter((n) => n.priority === 'High').length,
+    highPriority: notifications.filter((n) => n.priority === 'High' || n.priority === 'Emergency').length,
   };
 
   return {

@@ -21,11 +21,19 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS: {
     MY: '/api/notifications/my/',
     ALL: '/api/notifications/',
-    CREATE: '/api/notifications/create/',
+    CREATE: '/api/notifications/',
   },
   FEEDBACK: {
     SUBMIT: '/api/feedback/submit/',
     SESSION: (sessionId) => `/api/feedback/session/${sessionId}/`,
     TRAINER: (trainerId) => `/api/feedback/trainer/${trainerId}/`,
+  },
+  RECORDINGS: {
+    LIST_CREATE: '/api/recordings/',
+    DETAIL: (id) => `/api/recordings/${id}/`,
+    UPDATE_STATUS: (id) => `/api/recordings/${id}/update-status/`,
+    PLAYBACK_TOKEN: (id) => `/api/recordings/${id}/playback-token/`,
+    ANALYTICS: (id) => `/api/recordings/${id}/analytics/`,
+    MOST_VIEWED: '/api/recordings/most-viewed/',
   }
 };

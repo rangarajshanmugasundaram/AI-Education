@@ -6,7 +6,7 @@ export const classroomService = {
   // Session Details
   getSessionDetails: (id) => axiosInstance.get(`${API_BASE}/${id}/`),
 
-  // 🌟 NEW: Live Session Recovery State Restoration Endpoint
+  // Live Session Recovery State Restoration Endpoint
   getRecoveryState: (id) => axiosInstance.get(`${API_BASE}/${id}/recovery-state/`),
 
   // Session Controls

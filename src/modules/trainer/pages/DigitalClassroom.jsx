@@ -1,7 +1,9 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import WhiteboardZone from '../components/WhiteboardZone';
 import ClassroomChat from '../components/ClassroomChat';
+import classroomService from '../../../services/features/classroomService';
+import websocketService from '../../../services/features/websocketService';
 
 const MemoizedWhiteboard = memo(WhiteboardZone);
 const MemoizedChat = memo(ClassroomChat);
@@ -13,31 +15,95 @@ export default function DigitalClassroom() {
   // Identify Current User Role from local storage
   const userRole = localStorage.getItem('user_role') || 'Student';
 
-  // Check for active created session from Trainer
-  useEffect(() => {
-    const checkActiveSession = () => {
-      const storedSession = localStorage.getItem('active_live_session');
-      if (storedSession) {
-        try {
-          setActiveSession(JSON.parse(storedSession));
-        } catch (e) {
-          setActiveSession({ id: storedSession, isLive: true });
+  // Check active live session state
+  const checkActiveSession = useCallback(async () => {
+    const storedSession = localStorage.getItem('active_live_session');
+    if (storedSession) {
+      try {
+        const parsed = JSON.parse(storedSession);
+        if (parsed && parsed.isLive) {
+          setActiveSession(parsed);
+          return;
         }
-      } else {
-        // Fallback default active session for dev testing
-        setActiveSession({ id: 'session_101', isLive: true });
+      } catch (e) {
+        console.error('Error parsing active_live_session:', e);
+      }
+    }
+
+    // Query Django Backend directly
+    try {
+      if (classroomService?.getSessionDetails) {
+        const res = await classroomService.getSessionDetails('session_101');
+        const data = res?.data || res;
+        if (data && data.is_live) {
+          const liveObj = { id: data.id || 'session_101', isLive: true };
+          setActiveSession(liveObj);
+          localStorage.setItem('active_live_session', JSON.stringify(liveObj));
+          return;
+        }
+      }
+    } catch (err) {
+      // Quiet fallback
+    }
+
+    setActiveSession(null);
+  }, []);
+
+  useEffect(() => {
+    checkActiveSession();
+
+    const handleNewNotification = (payload) => {
+      const data = payload?.payload || payload;
+      if (!data) return;
+
+      const titleLower = String(data.title || '').toLowerCase();
+      const priorityLower = String(data.priority || '').toLowerCase();
+
+      const isLiveStart = 
+        priorityLower === 'emergency' || 
+        titleLower.includes('live session started') ||
+        titleLower.includes('started');
+
+      const isLiveEnd = 
+        titleLower.includes('ended') || 
+        titleLower.includes('closed') ||
+        data.isLive === false;
+
+      if (isLiveStart && !isLiveEnd) {
+        const liveObj = {
+          id: data.batch_id || data.session_id || 'session_101',
+          isLive: true,
+          title: data.title,
+        };
+        setActiveSession(liveObj);
+        localStorage.setItem('active_live_session', JSON.stringify(liveObj));
+      } else if (isLiveEnd) {
+        setActiveSession(null);
+        localStorage.removeItem('active_live_session');
       }
     };
 
-    checkActiveSession();
+    websocketService.on('NEW_NOTIFICATION', handleNewNotification);
+    websocketService.on('SESSION_CONTROL', (payload) => {
+      if (payload?.isLive === false || payload?.action === 'ended') {
+        setActiveSession(null);
+        localStorage.removeItem('active_live_session');
+      }
+    });
+
     window.addEventListener('storage', checkActiveSession);
-    return () => window.removeEventListener('storage', checkActiveSession);
-  }, []);
+    window.addEventListener('live_session_updated', checkActiveSession);
+
+    return () => {
+      websocketService.off('NEW_NOTIFICATION', handleNewNotification);
+      window.removeEventListener('storage', checkActiveSession);
+      window.removeEventListener('live_session_updated', checkActiveSession);
+    };
+  }, [checkActiveSession]);
 
   const activeSessionId = activeSession?.id || 'session_101';
-  const isSessionLive = activeSession?.isLive ?? true;
+  const isSessionLive = Boolean(activeSession && activeSession.isLive);
 
-  // Handler to redirect student into the full-screen live meeting page
   const handleJoinLiveSession = () => {
     if (!isSessionLive) {
       alert("No active live session available. Please wait for your trainer to start a class.");
@@ -68,7 +134,7 @@ export default function DigitalClassroom() {
               : 'bg-slate-100 text-slate-500 border-slate-200'
           }`}>
             <span className={`w-2 h-2 rounded-full ${isSessionLive ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'}`} aria-hidden="true" />
-            {isSessionLive ? `Live Session Active (${activeSessionId})` : 'No Live Session'}
+            {isSessionLive ? `Live Session Active (${activeSessionId})` : 'No Active Session'}
           </div>
 
           {/* 🎓 JOIN BUTTON FOR STUDENTS ONLY */}
@@ -79,7 +145,7 @@ export default function DigitalClassroom() {
               disabled={!isSessionLive}
               className={`text-xs font-bold px-4 py-2 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer ${
                 isSessionLive
-                  ? 'bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white'
+                  ? 'bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white animate-bounce'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
               }`}
             >

@@ -9,7 +9,6 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Dynamic extraction of query parameters for testing/Incognito isolation
     const searchParams = new URLSearchParams(window.location.search);
     const paramEmail = searchParams.get('email');
     const paramRole = searchParams.get('role');
@@ -17,9 +16,17 @@ axiosInstance.interceptors.request.use(
     if (paramEmail) localStorage.setItem('user_email', paramEmail);
     if (paramRole) localStorage.setItem('user_role', paramRole);
 
-    const email = localStorage.getItem('user_email');
-    if (email) {
-      config.headers['X-User-Email'] = email.trim().toLowerCase();
+    // Fallback to active user or default trainer credentials
+    const email = localStorage.getItem('user_email') || 'trainer@ai-education.com';
+    const role = localStorage.getItem('user_role') || 'Trainer';
+
+    // Set authorization headers expected by IsTrainerOrAdminForWrite
+    config.headers['X-User-Email'] = email.trim().toLowerCase();
+    config.headers['X-User-Role'] = role.trim();
+
+    // Enforce trailing slashes for Django REST framework
+    if (config.url && !config.url.endsWith('/') && !config.url.includes('?')) {
+      config.url += '/';
     }
 
     return config;

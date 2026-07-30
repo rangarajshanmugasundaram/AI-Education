@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateLiveSessionButton from '../components/CreateLiveSessionButton';
-import UploadRecordingModal from '../components/UploadRecordingModal'; 
+import UploadRecordingModal from '../../recordings/components/UploadRecordingModal'; 
 import feedbackService from '../../../services/features/feedbackService';
+import notificationService from '../../../services/features/notificationService';
+import classroomService from '../../../services/features/classroomService';
 
 export default function TrainerDashboard() {
   const navigate = useNavigate();
@@ -66,22 +68,83 @@ export default function TrainerDashboard() {
 
   const handleSessionCreated = useCallback((newSession) => {
     setSessions((prev) => [newSession, ...prev]);
-    // Save active live session to localStorage for DigitalClassroom listener
     localStorage.setItem('active_live_session', JSON.stringify({ id: newSession.id, isLive: true }));
+    window.dispatchEvent(new Event('live_session_updated'));
   }, []);
 
   const handleAddRecording = useCallback((newRecording) => {
     setRecordings((prevRecs) => [newRecording, ...prevRecs]);
   }, []);
 
-  const handleNotifyStudents = (id) => {
-    setSessions(prev => prev.map(s => s.id === id ? { ...s, notified: true } : s));
-    alert("System Update: Notifications pushed to all student profiles in this batch!");
+  // Push batch notification to students
+  const handleNotifyStudents = async (id, batchName) => {
+    try {
+      await notificationService.create({
+        title: `📢 Session Announcement: ${batchName || id}`,
+        message: `Trainer has posted an update regarding session (${id}). Please check your classroom portal.`,
+        priority: 'High',
+        recipient_type: 'All',
+        batch_id: id,
+      });
+
+      setSessions(prev => prev.map(s => s.id === id ? { ...s, notified: true } : s));
+      alert("System Update: Real-time notification pushed to student profiles!");
+    } catch (err) {
+      console.error('Failed to send notification:', err);
+    }
   };
 
-  const handleStartSession = (sessionId) => {
-    localStorage.setItem('active_live_session', JSON.stringify({ id: sessionId, isLive: true }));
-    navigate(`/live-session/${sessionId}`);
+  // Start Session & trigger backend API + global notification
+  const handleStartSession = async (sessionId, batchName) => {
+    try {
+      if (classroomService?.startSession) {
+        await classroomService.startSession(sessionId);
+      }
+
+      await notificationService.create({
+        title: `🔴 Live Session Started: ${batchName || sessionId}`,
+        message: `Trainer has initiated the live classroom (${sessionId}). Click 'Join Live Class' to connect now!`,
+        priority: 'Emergency',
+        recipient_type: 'All',
+        batch_id: sessionId,
+      });
+
+      localStorage.setItem('active_live_session', JSON.stringify({ id: sessionId, isLive: true }));
+      window.dispatchEvent(new Event('live_session_updated'));
+
+      navigate(`/live-session/${sessionId}`);
+    } catch (err) {
+      console.error('Error starting live session:', err);
+      localStorage.setItem('active_live_session', JSON.stringify({ id: sessionId, isLive: true }));
+      window.dispatchEvent(new Event('live_session_updated'));
+      navigate(`/live-session/${sessionId}`);
+    }
+  };
+
+  // End Session & reset student join button
+  const handleEndSession = async (sessionId, batchName) => {
+    try {
+      if (classroomService?.endSession) {
+        await classroomService.endSession(sessionId);
+      }
+
+      await notificationService.create({
+        title: `⏹️ Live Session Ended: ${batchName || sessionId}`,
+        message: `The live classroom session (${sessionId}) has been closed by the trainer.`,
+        priority: 'Low',
+        recipient_type: 'All',
+        batch_id: sessionId,
+      });
+
+      localStorage.removeItem('active_live_session');
+      window.dispatchEvent(new Event('live_session_updated'));
+
+      alert(`Session ${sessionId} has been successfully ended.`);
+    } catch (err) {
+      console.error('Error ending live session:', err);
+      localStorage.removeItem('active_live_session');
+      window.dispatchEvent(new Event('live_session_updated'));
+    }
   };
 
   return (
@@ -143,7 +206,7 @@ export default function TrainerDashboard() {
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                       <button
                         type="button"
-                        onClick={() => handleNotifyStudents(session.id)}
+                        onClick={() => handleNotifyStudents(session.id, session.batchName)}
                         disabled={session.notified}
                         className={`h-11 sm:h-9 px-4 text-xs font-bold rounded-xl transition-all border text-center cursor-pointer ${
                           session.notified 
@@ -153,12 +216,22 @@ export default function TrainerDashboard() {
                       >
                         {session.notified ? '✓ Notified' : 'Notify Students'}
                       </button>
+
                       <button 
                         type="button"
-                        onClick={() => handleStartSession(session.id)}
-                        className="h-11 sm:h-9 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold px-4 rounded-xl shadow-md transition-all text-center cursor-pointer"
+                        onClick={() => handleStartSession(session.id, session.batchName)}
+                        className="h-11 sm:h-9 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        Start Session
+                        <span>📹</span> Start Session
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={() => handleEndSession(session.id, session.batchName)}
+                        className="h-11 sm:h-9 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 active:scale-[0.98] text-xs font-bold px-3 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        title="Close live session and disable student join button"
+                      >
+                        <span>⏹️</span> End
                       </button>
                     </div>
                   </div>
@@ -166,14 +239,13 @@ export default function TrainerDashboard() {
               </div>
             </section>
 
-            {/* 🌟 STUDENT FEEDBACK & RATING ANALYTICS WIDGET */}
+            {/* Student Feedback & Rating Analytics Widget */}
             <section className="flex flex-col gap-3">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
                 Student Feedback & Ratings
               </h2>
               <div className="w-full bg-white border border-slate-200/70 rounded-2xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                {/* Score Summary Box */}
                 <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5 flex flex-col items-center justify-center text-center">
                   <span className="text-4xl font-black text-indigo-700">
                     ⭐ {feedbackData.metrics.overall_rating || '5.0'}
@@ -182,7 +254,6 @@ export default function TrainerDashboard() {
                   <span className="text-[10px] text-indigo-600 mt-0.5">Based on {feedbackData.metrics.total_reviews} student reviews</span>
                 </div>
 
-                {/* Reviews Stream */}
                 <div className="md:col-span-2 space-y-3 max-h-56 overflow-y-auto pr-1">
                   {feedbackData.results.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-center p-6 text-slate-400 text-xs">
