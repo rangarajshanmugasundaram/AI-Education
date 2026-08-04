@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, Trash2, ShieldCheck } from 'lucide-react';
 import axiosInstance from '../../../services/api/axiosSetup';
 
 export default function ClassroomChat({ sessionId = 'session_101' }) {
@@ -148,14 +149,14 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
       {/* Messages Feed */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50"
+        className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 custom-scrollbar bg-slate-50/40"
       >
         {isLoading && messages.length === 0 ? (
-          <div className="text-center text-xs text-slate-400 py-4">Syncing chat logs...</div>
+          <div className="text-center text-xs text-slate-400 py-6">Syncing chat logs...</div>
         ) : error ? (
-          <div className="text-center text-xs text-red-500 py-4 font-medium">{error}</div>
+          <div className="text-center text-xs text-rose-500 py-6 font-medium">{error}</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-xs text-slate-400 py-4">No messages yet in this session. Send one to start!</div>
+          <div className="text-center text-xs text-slate-400 py-6">No messages yet in this session.</div>
         ) : (
           messages.map((msg) => {
             const currentEmail = getUserEmail();
@@ -164,38 +165,40 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col max-w-[85%] ${!isMe ? 'mr-auto items-start' : 'ml-auto items-end'}`}
+                className={`flex flex-col max-w-[88%] ${!isMe ? 'mr-auto items-start' : 'ml-auto items-end'}`}
               >
-                <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase mb-1 px-1">
-                  {msg.sender} <span className="mx-1 font-normal text-slate-300">•</span>{' '}
-                  <span className="font-medium lowercase">{msg.timestamp}</span>
-                  {msg.isAdmin && <span className="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1 rounded">Staff</span>}
+                {/* Sender Tagline */}
+                <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase mb-1 px-1 flex items-center gap-1">
+                  <span>{msg.sender}</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="font-mono text-slate-400 lowercase">{msg.timestamp}</span>
+                  {msg.isAdmin && (
+                    <span className="ml-1 inline-flex items-center gap-0.5 text-[9px] bg-slate-900 text-white px-1.5 py-0.2 rounded font-semibold uppercase">
+                      <ShieldCheck className="w-2.5 h-2.5 text-emerald-400" /> Staff
+                    </span>
+                  )}
                 </span>
 
+                {/* Message Bubble Container */}
                 <div className="group flex items-center gap-2">
                   <div
-                    className={`p-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm tracking-wide ${
+                    className={`p-3 rounded-xl text-xs leading-relaxed shadow-2xs tracking-tight ${
                       !isMe
-                        ? 'bg-white text-slate-800 rounded-tl-none border border-slate-200/60'
-                        : 'bg-blue-600 text-white rounded-tr-none font-medium'
+                        ? 'bg-white text-slate-800 border border-slate-200/80 rounded-tl-none'
+                        : 'bg-slate-900 text-white rounded-tr-none font-medium'
                     }`}
                   >
                     {msg.text}
                   </div>
 
+                  {/* Delete Action Button for Trainers */}
                   {getUserRole().toLowerCase() === 'trainer' && (
                     <button
                       onClick={() => handleDeleteMessage(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-full bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 shadow-sm transition-all duration-150 shrink-0 cursor-pointer"
+                      className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-md bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 shadow-2xs transition-all shrink-0 cursor-pointer"
                       title="Delete message"
                     >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                      <Trash2 className="w-3 h-3 text-slate-400 hover:text-rose-600" />
                     </button>
                   )}
                 </div>
@@ -205,22 +208,23 @@ export default function ClassroomChat({ sessionId = 'session_101' }) {
         )}
       </div>
 
-      {/* Input Box */}
+      {/* Responsive Input Bar */}
       <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 bg-white shrink-0">
-        <div className="flex gap-2 items-center bg-slate-50 border border-slate-200 rounded-xl p-1 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:border-blue-500 focus-within:bg-white transition-all duration-200">
+        <div className="flex gap-2 items-center bg-slate-50 border border-slate-200/80 rounded-lg p-1 focus-within:border-slate-900 focus-within:bg-white transition-all">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your message here..."
-            className="flex-1 bg-transparent border-0 outline-none text-xs sm:text-sm h-9 px-2 text-slate-700 placeholder-slate-400"
+            className="flex-1 bg-transparent border-0 outline-none text-xs h-8 px-2 text-slate-800 placeholder-slate-400"
           />
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="bg-blue-600 text-white font-bold text-xs px-4 h-9 rounded-lg hover:bg-blue-700 active:scale-[0.97] transition-all disabled:opacity-30 disabled:pointer-events-none shrink-0 cursor-pointer"
+            className="bg-slate-900 text-white font-bold text-xs px-3 h-8 rounded-md hover:bg-slate-800 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none shrink-0 cursor-pointer flex items-center gap-1.5"
           >
-            Send
+            <Send className="w-3 h-3 text-white" />
+            <span className="hidden sm:inline">Send</span>
           </button>
         </div>
       </form>

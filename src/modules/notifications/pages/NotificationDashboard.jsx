@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Bell, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { NotificationStatsCard } from '../components/NotificationStatsCard';
 import { NotificationFilters } from '../components/NotificationFilters';
@@ -38,29 +39,32 @@ export function NotificationDashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-[#F8FAFC] min-h-screen">
-      {/* Header Banner Card */}
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-extrabold text-blue-950 flex items-center gap-2">
-            📢 Notification Management
+    <div className="w-full flex flex-col gap-6 max-w-[1600px] mx-auto bg-slate-50/30 min-h-screen">
+      {/* Enterprise Header Banner */}
+      <div className="w-full bg-white border border-slate-200/80 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <Bell className="w-5 h-5 text-slate-700" />
+            Notification Management
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500">
             Create, manage, and send broadcast alerts to users and batches.
           </p>
         </div>
+
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-blue-500/10 transition cursor-pointer"
+          className="h-9 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-1.5"
         >
-          + Create Notification
+          <Plus className="w-3.5 h-3.5 text-white" />
+          <span>Create Notification</span>
         </button>
       </div>
 
       {/* Stats Cards */}
       <NotificationStatsCard stats={stats} />
 
-      {/* Filters */}
+      {/* Filters Toolbar */}
       <NotificationFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}

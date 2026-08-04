@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Pencil, Eraser, Square, Circle, Type, Trash2 } from 'lucide-react';
 import { getData } from "../../../services/api/getData";
 import { postData } from "../../../services/api/postData";
 import { deleteData } from "../../../services/api/deleteData";
@@ -185,33 +186,49 @@ export default function WhiteboardZone({ sessionId = 'session_101' }) {
     }
   };
 
+  const toolIcons = {
+    [TOOLS.PEN]: Pencil,
+    [TOOLS.ERASER]: Eraser,
+    [TOOLS.RECT]: Square,
+    [TOOLS.CIRCLE]: Circle,
+    [TOOLS.TEXT]: Type
+  };
+
   return (
-    <div className="flex flex-col w-full h-full bg-slate-50 p-3 overflow-hidden">
-      {/* Top Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 bg-white p-2 rounded-xl border border-slate-200/80 shadow-sm shrink-0">
+    <div className="flex flex-col w-full h-full bg-slate-50 p-3 sm:p-4 overflow-hidden">
+      {/* Top Floating Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 bg-white p-2 sm:p-2.5 rounded-xl border border-slate-200/80 shadow-xs shrink-0">
         
-        {/* Tool Selector Buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {Object.values(TOOLS).map(t => (
-            <button 
-              key={t} 
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition cursor-pointer ${
-                tool === t ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`} 
-              onClick={() => setTool(t)}
-            >
-              {t}
-            </button>
-          ))}
+        {/* Tool Selector Buttons with Lucide Vector Icons */}
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+          {Object.values(TOOLS).map((t) => {
+            const Icon = toolIcons[t];
+            const isActive = tool === t;
+            return (
+              <button 
+                key={t} 
+                className={`h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold capitalize transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isActive 
+                    ? 'bg-slate-900 text-white shadow-xs font-bold' 
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60'
+                }`} 
+                onClick={() => setTool(t)}
+                title={`Select ${t}`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                <span className="hidden sm:inline">{t}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Customization Options */}
+        {/* Customization Controls */}
         <div className="flex items-center gap-2">
           {/* Stroke Size Selector */}
           <select
             value={size}
             onChange={(e) => setSize(Number(e.target.value))}
-            className="text-xs bg-slate-100 border border-slate-200 font-medium rounded-lg px-2 py-1 outline-none cursor-pointer text-slate-700"
+            className="h-8 text-xs bg-slate-50 border border-slate-200 font-mono font-medium rounded-lg px-2 outline-none cursor-pointer text-slate-700 hover:bg-slate-100 transition-all"
             title="Stroke Width"
           >
             <option value={2}>2px</option>
@@ -220,35 +237,41 @@ export default function WhiteboardZone({ sessionId = 'session_101' }) {
             <option value={12}>12px</option>
           </select>
 
-          {/* Stroke Color Picker */}
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-7 h-7 rounded-lg border border-slate-200 cursor-pointer"
-            title="Stroke Color"
-          />
+          {/* Color Picker */}
+          <div className="relative flex items-center justify-center">
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer overflow-hidden p-0 bg-transparent"
+              title="Stroke Color"
+            />
+          </div>
 
-          {/* Clear Canvas Action (Shown for Trainers & Admins) */}
+          {/* Clear Board Button */}
           {canClearBoard && (
             <button 
-              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold text-xs px-3 py-1.5 rounded-lg transition cursor-pointer active:scale-95" 
+              className="h-8 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 font-bold text-xs px-3 rounded-lg transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ml-1" 
               onClick={handleClear}
+              title="Clear Whiteboard"
             >
-              Clear Canvas
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span className="hidden sm:inline">Clear</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* HTML5 Canvas Surface */}
-      <canvas 
-        ref={canvasRef} 
-        className="flex-1 w-full bg-white border border-slate-200/80 rounded-xl shadow-inner cursor-crosshair min-h-0" 
-        onMouseDown={startDrawing} 
-        onMouseMove={draw} 
-        onMouseUp={stopDrawing} 
-      />
+      {/* Surface Canvas Area */}
+      <div className="flex-1 w-full bg-white border border-slate-200/80 rounded-xl shadow-xs relative overflow-hidden min-h-0">
+        <canvas 
+          ref={canvasRef} 
+          className="w-full h-full cursor-crosshair min-h-0 block" 
+          onMouseDown={startDrawing} 
+          onMouseMove={draw} 
+          onMouseUp={stopDrawing} 
+        />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { X, Edit3 } from 'lucide-react';
 import { recordingService } from '../../../services/features/recordingService';
 
 export default function EditRecordingModal({ isOpen, onClose, recording, onUpdateSuccess }) {
@@ -31,35 +32,46 @@ export default function EditRecordingModal({ isOpen, onClose, recording, onUpdat
   };
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4" style={{ zIndex: 99999 }}>
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
-        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">Edit Recording</h3>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150" style={{ zIndex: 99999 }}>
+      <div className="bg-white rounded-xl w-full max-w-md p-5 sm:p-6 shadow-xl border border-slate-200/80">
+        <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <Edit3 className="w-4 h-4 text-slate-700" />
+            Edit Recording
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1.5 rounded-lg transition cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="text-[11px] font-bold text-slate-500 uppercase">Title</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl h-10 px-3 text-xs text-slate-700 outline-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg h-9 px-3 text-xs text-slate-800 outline-none focus:border-slate-900 focus:bg-white transition-all"
             />
           </div>
-          <div>
-            <label className="text-[11px] font-bold text-slate-500 uppercase">Visibility</label>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Visibility</label>
             <select
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl h-10 px-3 text-xs text-slate-700 outline-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg h-9 px-3 text-xs text-slate-800 outline-none focus:border-slate-900 cursor-pointer font-medium"
             >
               <option value="Public Batch">Public Batch</option>
               <option value="Private">Private</option>
             </select>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-xl text-xs font-bold text-slate-500">
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 mt-1">
+            <button type="button" onClick={onClose} className="h-9 px-4 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm">
+            <button type="submit" disabled={loading} className="h-9 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer shadow-xs active:scale-95 disabled:opacity-50">
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>

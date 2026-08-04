@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Mic, MicOff, Video, VideoOff, VolumeX } from 'lucide-react';
 
 export const MediaControls = ({ onToggleMute, onToggleCamera, onMuteAll }) => {
   const [isMuted, setIsMuted] = useState(false);
@@ -17,40 +18,41 @@ export const MediaControls = ({ onToggleMute, onToggleCamera, onMuteAll }) => {
   };
 
   return (
-    <div className="flex items-center gap-2 bg-slate-900/90 text-white p-2 px-4 rounded-2xl shadow-xl backdrop-blur-md">
+    <div className="flex items-center gap-2 bg-slate-950/90 text-white p-2 px-3 sm:px-4 rounded-xl shadow-xl border border-slate-800 backdrop-blur-xs">
       {/* Mic Control */}
       <button
         onClick={handleMuteClick}
-        className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition ${
+        className={`flex items-center gap-1.5 text-xs font-semibold px-3 h-8 rounded-lg transition-all cursor-pointer active:scale-95 ${
           isMuted
-            ? 'bg-rose-500 hover:bg-rose-600 text-white'
-            : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            ? 'bg-rose-600 text-white shadow-xs'
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800'
         }`}
       >
-        <span>{isMuted ? '🎙️❌' : '🎙️'}</span>
+        {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-slate-300" />}
         <span>{isMuted ? 'Unmute' : 'Mute'}</span>
       </button>
 
       {/* Camera Control */}
       <button
         onClick={handleCameraClick}
-        className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition ${
+        className={`flex items-center gap-1.5 text-xs font-semibold px-3 h-8 rounded-lg transition-all cursor-pointer active:scale-95 ${
           !isCameraOn
-            ? 'bg-rose-500 hover:bg-rose-600 text-white'
-            : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            ? 'bg-rose-600 text-white shadow-xs'
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800'
         }`}
       >
-        <span>{isCameraOn ? '📷' : '📷❌'}</span>
-        <span>{isCameraOn ? 'Cam On' : 'Cam Off'}</span>
+        {!isCameraOn ? <VideoOff className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5 text-slate-300" />}
+        <span>{!isCameraOn ? 'Cam Off' : 'Cam On'}</span>
       </button>
 
       {/* Mute All Action (Trainer Only) */}
       {onMuteAll && (
         <button
           onClick={onMuteAll}
-          className="text-xs font-semibold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-2 rounded-xl transition ml-2"
+          className="text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 h-8 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ml-1"
         >
-          Mute All
+          <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+          <span>Mute All</span>
         </button>
       )}
     </div>

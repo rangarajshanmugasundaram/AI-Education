@@ -1,5 +1,23 @@
 import { useState, memo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { 
+  Bell, 
+  Mic, 
+  MicOff, 
+  Video, 
+  VideoOff, 
+  Hand, 
+  Users, 
+  MessageSquare, 
+  Lock, 
+  Unlock, 
+  Clock, 
+  ClipboardList, 
+  PhoneOff, 
+  Layout, 
+  X,
+  ShieldCheck
+} from 'lucide-react';
 
 // Core Components
 import WhiteboardZone from '../components/WhiteboardZone';
@@ -112,13 +130,13 @@ export function LiveClassroomPage() {
           <div
             key={`${n.id || index}-${index}`}
             onClick={() => setNotifications((prev) => prev.filter((item) => item.id !== n.id))}
-            className="pointer-events-auto bg-slate-900/90 backdrop-blur-md text-white text-xs px-3 py-2 rounded-lg shadow-xl border border-indigo-500/40 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-800 transition"
+            className="pointer-events-auto bg-slate-900/90 backdrop-blur-md text-white text-xs px-3.5 py-2.5 rounded-xl shadow-xl border border-slate-800 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-800 transition-all"
           >
-            <div className="flex items-center gap-1.5 truncate">
-              <span className="text-xs">🔔</span>
-              <span className="font-medium truncate">{n.message}</span>
+            <div className="flex items-center gap-2 truncate">
+              <Bell className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="font-medium text-xs truncate">{n.message}</span>
             </div>
-            <span className="text-[10px] text-slate-400 hover:text-white font-bold ml-2">✕</span>
+            <X className="w-3.5 h-3.5 text-slate-400 hover:text-white shrink-0" />
           </div>
         ))}
       </div>
@@ -126,34 +144,38 @@ export function LiveClassroomPage() {
       {/* 🖥️ Main Viewport Grid */}
       <div className="flex-1 w-full flex p-3 gap-3 overflow-hidden relative">
         
-        {/* BIG SCREEN: Whiteboard / Camera */}
-        <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl min-w-0">
+        {/* Main Workspace Stage */}
+        <div className="flex-1 bg-slate-900/80 border border-slate-800/80 rounded-2xl relative overflow-hidden flex flex-col shadow-2xl min-w-0">
           {viewMode === 'whiteboard' ? (
             <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
               <MemoizedWhiteboard sessionId={sessionId} />
             </div>
           ) : (
-            <div style={{ background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #020617)' }} className="w-full h-full flex flex-col items-center justify-center ">
-              <div className="w-24 h-24 rounded-full bg-indigo-600/30 border-2 border-indigo-500/50 flex items-center justify-center text-2xl font-black text-indigo-300 shadow-2xl">
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950">
+              <div className="w-24 h-24 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl font-bold text-slate-300 shadow-xl">
                 {trainerParticipant.name?.substring(0, 2).toUpperCase()}
               </div>
-              <p className="text-xs font-semibold text-slate-300 mt-3">{trainerParticipant.name}</p>
+              <p className="text-xs font-semibold text-slate-300 mt-3 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                {trainerParticipant.name}
+              </p>
             </div>
           )}
         </div>
 
-        {/* 👥 Student Tile Panel */}
-        <div className="w-56 shrink-0 flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 overflow-hidden shadow-xl">
+        {/* 👥 Student Tiles Strip */}
+        <div className="w-56 shrink-0 flex flex-col bg-slate-900/80 border border-slate-800/80 rounded-2xl p-2.5 overflow-hidden shadow-xl">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1 flex items-center justify-between">
             <span>Students ({studentParticipants.length})</span>
             {raisedHands.length > 0 && (
-              <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-md font-extrabold">
-                ✋ {raisedHands.length} Raised
+              <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <Hand className="w-2.5 h-2.5 text-amber-400" />
+                {raisedHands.length}
               </span>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
             {studentParticipants.map((student) => {
               const isMuted = student.isMuted || student.is_muted;
               const isCameraOn = student.isCameraOn ?? student.is_camera_on ?? true;
@@ -162,24 +184,24 @@ export function LiveClassroomPage() {
               return (
                 <div
                   key={student.id || student.email}
-                  className="w-full h-28 bg-slate-800/90 border border-slate-700/60 rounded-xl relative overflow-hidden flex flex-col items-center justify-center shadow-md transition hover:border-slate-500 group shrink-0"
+                  className="w-full h-28 bg-slate-950 border border-slate-800/90 rounded-xl relative overflow-hidden flex flex-col items-center justify-center shadow-md transition hover:border-slate-700 group shrink-0"
                 >
                   {hasRaised && (
-                    <div className="absolute top-1.5 left-1.5 z-20 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-md">
-                      <span>✋</span> Raised
+                    <div className="absolute top-1.5 left-1.5 z-20 bg-amber-500 text-slate-950 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-md">
+                      <Hand className="w-2.5 h-2.5 fill-slate-950" /> Raised
                     </div>
                   )}
 
-                  <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1 bg-slate-950/70 px-1.5 py-0.5 rounded text-[9px]">
-                    <span>{isMuted ? '🎙️❌' : '🎙️✅'}</span>
-                    <span>{isCameraOn ? '📹' : '🙈'}</span>
+                  <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1 bg-slate-900/80 backdrop-blur-xs px-1.5 py-0.5 rounded border border-slate-800 text-[9px]">
+                    {isMuted ? <MicOff className="w-2.5 h-2.5 text-rose-400" /> : <Mic className="w-2.5 h-2.5 text-emerald-400" />}
+                    {isCameraOn ? <Video className="w-2.5 h-2.5 text-slate-300" /> : <VideoOff className="w-2.5 h-2.5 text-rose-400" />}
                   </div>
 
-                  <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-slate-200 border border-slate-600 text-xs">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-slate-300 text-xs shadow-xs">
                     {student.name?.substring(0, 2).toUpperCase()}
                   </div>
 
-                  <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-slate-200 truncate border border-slate-800 text-center">
+                  <div className="absolute bottom-1.5 left-1.5 right-1.5 bg-slate-900/90 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-slate-200 truncate border border-slate-800 text-center">
                     {student.name}
                   </div>
                 </div>
@@ -188,38 +210,43 @@ export function LiveClassroomPage() {
           </div>
         </div>
 
-        {/* 💬 RIGHT SIDEBAR */}
+        {/* 💬 RIGHT SIDEBAR PANEL */}
         {isSidebarOpen && (
           <aside className="w-80 shrink-0 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl">
             <div className="p-2 border-b border-slate-800 bg-slate-950/60 shrink-0 flex gap-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('chat')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-                  activeTab === 'chat' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'chat' ? 'bg-slate-800 text-white font-bold shadow-xs' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                💬 Chat
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Chat</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => setActiveTab('participants')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-                  activeTab === 'participants' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  activeTab === 'participants' ? 'bg-slate-800 text-white font-bold shadow-xs' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                👥 Users ({participants.length})
+                <Users className="w-3.5 h-3.5" />
+                <span>Users ({participants.length})</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => setActiveTab('hands')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition relative cursor-pointer ${
-                  activeTab === 'hands' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 relative cursor-pointer ${
+                  activeTab === 'hands' ? 'bg-slate-800 text-white font-bold shadow-xs' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                ✋ Hands
+                <Hand className="w-3.5 h-3.5" />
+                <span>Hands</span>
                 {raisedHands.length > 0 && (
-                  <span className="ml-1 bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black">
+                  <span className="bg-amber-500 text-slate-950 text-[9px] px-1.5 py-0.2 rounded-full font-bold">
                     {raisedHands.length}
                   </span>
                 )}
@@ -256,49 +283,59 @@ export function LiveClassroomPage() {
       </div>
 
       {/* 🎛️ BOTTOM CONTROL TOOLBAR */}
-      <footer className="w-full h-14 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between shrink-0">
+      <footer className="w-full h-16 bg-slate-950 border-t border-slate-800/80 px-4 md:px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono font-bold text-slate-400">Room: {sessionId}</span>
-          <span className="text-[10px] bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded-full border border-slate-700">
+          <span className="text-xs font-mono font-semibold text-slate-400">Room: {sessionId}</span>
+          <span className="text-[10px] bg-slate-900 text-slate-300 font-semibold px-2.5 py-0.5 rounded-md border border-slate-800 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             {participants.length} Active
           </span>
         </div>
 
+        {/* Center Audio/Video Controls */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => toggleSelfMute(currentUser.email)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              isSelfMuted ? 'bg-rose-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            className={`h-9 px-3.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+              isSelfMuted 
+                ? 'bg-rose-600 text-white shadow-xs' 
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800'
             }`}
           >
-            {isSelfMuted ? '🎙️ Off' : '🎙️ On'}
+            {isSelfMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-slate-300" />}
+            <span>{isSelfMuted ? 'Muted' : 'Unmuted'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => toggleSelfCamera(currentUser.email)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              !isSelfCameraOn ? 'bg-rose-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            className={`h-9 px-3.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+              !isSelfCameraOn 
+                ? 'bg-rose-600 text-white shadow-xs' 
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800'
             }`}
           >
-            {isSelfCameraOn ? '📹 On' : '📹 Off'}
+            {!isSelfCameraOn ? <VideoOff className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5 text-slate-300" />}
+            <span>{!isSelfCameraOn ? 'Cam Off' : 'Cam On'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setViewMode((prev) => (prev === 'whiteboard' ? 'camera' : 'whiteboard'))}
-            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+            className="h-9 px-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
-            {viewMode === 'whiteboard' ? '📹 Trainer Cam' : '🎨 Whiteboard'}
+            <Layout className="w-3.5 h-3.5 text-slate-400" />
+            <span>{viewMode === 'whiteboard' ? 'Trainer Cam' : 'Whiteboard'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => raiseHand(currentUser.email)}
-            className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+            className="h-9 px-3.5 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-800 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
-            ✋ Hand
+            <Hand className="w-3.5 h-3.5 text-amber-400" />
+            <span>Raise Hand</span>
           </button>
 
           {currentUser.role === 'Trainer' && (
@@ -306,19 +343,23 @@ export function LiveClassroomPage() {
               <button
                 type="button"
                 onClick={muteAll}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                className="h-9 px-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold rounded-lg transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
               >
-                Mute All
+                <MicOff className="w-3.5 h-3.5 text-slate-400" />
+                <span>Mute All</span>
               </button>
 
               <button
                 type="button"
                 onClick={toggleLock}
-                className={`px-3 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
-                  sessionState.isLocked ? 'bg-amber-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                className={`h-9 px-3.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 border ${
+                  sessionState.isLocked 
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' 
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
                 }`}
               >
-                {sessionState.isLocked ? '🔒 Locked' : '🔓 Lock'}
+                {sessionState.isLocked ? <Lock className="w-3.5 h-3.5 text-amber-400" /> : <Unlock className="w-3.5 h-3.5 text-slate-400" />}
+                <span>{sessionState.isLocked ? 'Locked' : 'Lock Room'}</span>
               </button>
             </>
           )}
@@ -326,22 +367,24 @@ export function LiveClassroomPage() {
           <button
             type="button"
             onClick={handleEndOrLeaveMeeting}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition cursor-pointer shadow ml-2"
+            className="h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ml-2 shadow-xs"
           >
-            📞 {currentUser.role.toLowerCase() === 'student' ? 'Leave Meeting' : 'End Meeting'}
+            <PhoneOff className="w-3.5 h-3.5 text-white" />
+            <span>{currentUser.role.toLowerCase() === 'student' ? 'Leave Meeting' : 'End Meeting'}</span>
           </button>
         </div>
 
+        {/* Right Drawer Action Buttons */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setIsWaitingRoomOpen(true)}
-            className="relative p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+            className="relative h-9 w-9 flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg transition-all cursor-pointer active:scale-95"
             title="Waiting Room"
           >
-            ⏳
+            <Clock className="w-4 h-4 text-slate-400" />
             {waitingRoom.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce">
+              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-slate-950">
                 {waitingRoom.length}
               </span>
             )}
@@ -350,19 +393,19 @@ export function LiveClassroomPage() {
           <button
             type="button"
             onClick={() => setIsLogDrawerOpen(true)}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+            className="h-9 w-9 flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg transition-all cursor-pointer active:scale-95"
             title="Activity Logs"
           >
-            📋
+            <ClipboardList className="w-4 h-4 text-slate-400" />
           </button>
 
           <button
             type="button"
             onClick={() => setIsSidebarOpen((prev) => !prev)}
-            className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+            className="h-9 w-9 flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg transition-all cursor-pointer active:scale-95"
             title="Toggle Sidebar"
           >
-            💬
+            <MessageSquare className="w-4 h-4 text-slate-400" />
           </button>
         </div>
       </footer>

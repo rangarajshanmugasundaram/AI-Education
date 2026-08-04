@@ -1,5 +1,6 @@
-import { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Bell, Mail, Menu, Radio, User, Settings, HelpCircle, LogOut, ChevronDown } from 'lucide-react';
 import notificationService from '../services/features/notificationService';
 import websocketService from '../services/features/websocketService';
 import classroomService from '../services/features/classroomService';
@@ -13,32 +14,25 @@ const Header = ({ toggleSidebar }) => {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeSession, setActiveSession] = useState(null);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  // Safe case-insensitive role check
+  const profileDropdownRef = useRef(null);
+
   const isStudentRole = 
     userRole?.toLowerCase() === 'student' || 
     userRole?.toLowerCase() === ROLES?.STUDENT?.toLowerCase();
 
-  const getPageTitle = (pathname) => {
-    switch (pathname) {
-      case '/digital-classroom':
-        return 'Digital Classroom';
-      case '/notifications-inbox':
-        return 'Notifications';
-      case '/notifications':
-        return 'Notification Management';
-      case '/attendance':
-        return 'Attendance Tracker';
-      case '/analytics':
-        return 'Analytics & Performance';
-      case '/settings':
-        return 'Account Settings';
-      default:
-        return 'Overview';
-    }
-  };
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  // 1. Sync active session state across Storage & Backend DB
   const checkActiveSession = useCallback(async () => {
     const storedSession = localStorage.getItem('active_live_session');
     if (storedSession) {
@@ -53,7 +47,6 @@ const Header = ({ toggleSidebar }) => {
       }
     }
 
-    // Direct Django DB Check - If session is not live, clear state
     try {
       if (classroomService?.getSessionDetails) {
         const res = await classroomService.getSessionDetails('session_101');
@@ -69,11 +62,9 @@ const Header = ({ toggleSidebar }) => {
       // Quiet fallback
     }
 
-    // Default to ended/inactive
     setActiveSession(null);
   }, []);
 
-  // 2. Fetch unread notification badge count
   const fetchUnreadCount = useCallback(async () => {
     try {
       const response = await notificationService.getMy();
@@ -90,37 +81,23 @@ const Header = ({ toggleSidebar }) => {
     checkActiveSession();
   }, [fetchUnreadCount, checkActiveSession, location.pathname]);
 
-  // 3. Real-time WebSocket & Event Listeners
   useEffect(() => {
     const handleNewBroadcast = (payload) => {
       fetchUnreadCount();
-
       const data = payload?.payload || payload;
       if (!data) return;
 
       const titleLower = String(data.title || '').toLowerCase();
       const priorityLower = String(data.priority || '').toLowerCase();
 
-      const isLiveStart = 
-        priorityLower === 'emergency' || 
-        titleLower.includes('live session started') ||
-        titleLower.includes('started');
-
-      const isLiveEnd = 
-        titleLower.includes('ended') || 
-        titleLower.includes('closed') ||
-        data.isLive === false;
+      const isLiveStart = priorityLower === 'emergency' || titleLower.includes('live session started') || titleLower.includes('started');
+      const isLiveEnd = titleLower.includes('ended') || titleLower.includes('closed') || data.isLive === false;
 
       if (isLiveStart && !isLiveEnd) {
-        const liveObj = {
-          id: data?.batch_id || data?.session_id || 'session_101',
-          isLive: true,
-          title: data?.title,
-        };
+        const liveObj = { id: data?.batch_id || data?.session_id || 'session_101', isLive: true, title: data?.title };
         setActiveSession(liveObj);
         localStorage.setItem('active_live_session', JSON.stringify(liveObj));
       } else if (isLiveEnd) {
-        // 🌟 CLEAR LIVE SESSION UPON TRAINER ENDING CLASS
         setActiveSession(null);
         localStorage.removeItem('active_live_session');
       }
@@ -147,6 +124,7 @@ const Header = ({ toggleSidebar }) => {
   const notificationRoute = isStudentRole ? '/notifications-inbox' : '/notifications';
 
   const handleLogout = () => {
+    setIsProfileMenuOpen(false);
     logout();
     navigate('/login');
   };
@@ -156,80 +134,159 @@ const Header = ({ toggleSidebar }) => {
     navigate(`/live-session/${targetId}`);
   };
 
-  const userInitials = user?.email
-    ? user.email.slice(0, 2).toUpperCase()
-    : 'RS';
+  const userInitials = user?.email ? user.email.slice(0, 2).toUpperCase() : 'AI';
+  const userEmail = user?.email || 'user@aieducation.com';
 
   return (
-    <header className="sticky top-0 z-30 flex h-17.5 w-full items-center justify-between border-b border-blue-100 bg-[#F0F9FF] px-6 transition-colors duration-200">
-      {/* Left Block - Dynamic Title */}
+    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white px-6 md:px-8 transition-all">
+      {/* Product Title Brand */}
       <div className="flex items-center gap-4">
         <button 
           onClick={toggleSidebar} 
-          className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-white text-xl text-blue-600 hover:bg-blue-50 active:scale-95 transition-all cursor-pointer"
+          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 cursor-pointer transition-all active:scale-95"
+          aria-label="Toggle Sidebar"
         >
-          ☰
+          <Menu className="w-4 h-4 text-slate-600" />
         </button>
-        <div>
-          <h1 className="text-lg font-bold text-blue-950 tracking-tight">
-            {getPageTitle(location.pathname)}
-          </h1>
+        
+        <div 
+          className="flex items-center gap-3 cursor-pointer group" 
+          onClick={() => navigate('/')}
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-xs font-black text-white shadow-xs group-hover:bg-slate-800 transition-all">
+            AI
+          </div>
+          <span className="text-base font-bold text-slate-900 tracking-tight">
+            AI Education
+          </span>
         </div>
       </div>
 
-      {/* Right Block */}
-      <div className="flex items-center gap-4">
-        {/* 🎓 REAL-TIME JOIN LIVE CLASS BUTTON (STUDENTS ONLY) */}
+      {/* Right Action Controls */}
+      <div className="flex items-center gap-3">
+        {/* Student Live Session Portal Join Button */}
         {isStudentRole && (
           <button
             type="button"
             onClick={handleJoinLiveSession}
             disabled={!activeSession?.isLive}
-            className={`h-10 px-4 text-xs font-black rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            className={`h-9 px-4 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
               activeSession?.isLive
-                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/20 active:scale-95'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs active:scale-95 font-bold'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/80'
             }`}
           >
-            <span 
-              className={`w-2.5 h-2.5 rounded-full ${
-                activeSession?.isLive ? 'bg-white animate-ping' : 'bg-slate-400'
-              }`} 
-            />
-            <span>{activeSession?.isLive ? '📹 Join Live Class' : 'No Active Live Session'}</span>
+            <Radio className={`w-3.5 h-3.5 ${activeSession?.isLive ? 'animate-pulse text-white' : 'text-slate-400'}`} />
+            <span>{activeSession?.isLive ? 'Join Live Class' : 'No Active Session'}</span>
           </button>
         )}
 
-        <div className="hidden md:flex items-center gap-3">
-          {/* Notification Bell */}
+        {/* Global Toolbar */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Notifications Bell */}
           <button 
             onClick={() => navigate(notificationRoute)}
-            className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-base shadow-sm shadow-blue-500/5 transition-all cursor-pointer"
+            className="relative h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-600 transition-all cursor-pointer active:scale-95"
             title="Notifications"
+            aria-label="View Notifications"
           >
-            🔔
+            <Bell className="w-4 h-4 text-slate-600" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+              <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
 
-          <button className="h-10 w-10 flex items-center justify-center rounded-xl border border-blue-200 bg-white hover:bg-blue-50 text-base shadow-sm shadow-blue-500/5 transition-all cursor-pointer">
-            ✉️
+          {/* Quick Messages */}
+          <button 
+            className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-600 transition-all cursor-pointer active:scale-95"
+            title="Messages"
+            aria-label="View Messages"
+          >
+            <Mail className="w-4 h-4 text-slate-600" />
           </button>
         </div>
         
-        {/* Logout Profile Avatar */}
-        <div 
-          className="relative cursor-pointer group" 
-          onClick={handleLogout}
-          title="Click to Logout"
-        >
-          <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-600/20 group-hover:bg-blue-700 active:scale-95 transition-all">
-            {userInitials}
-          </div>
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#F0F9FF] bg-emerald-500"></span>
+        {/* User Profile Avatar with Dropdown */}
+        <div className="relative pl-1.5" ref={profileDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+            className="flex items-center gap-2 rounded-lg p-1 text-left transition-all hover:bg-slate-100/80 cursor-pointer focus:outline-none"
+            aria-expanded={isProfileMenuOpen}
+          >
+            <div className="relative">
+              <div className="h-9 w-9 rounded-lg bg-slate-900 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                {userInitials}
+              </div>
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500"></span>
+            </div>
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Enterprise Profile Menu Popup */}
+          {isProfileMenuOpen && (
+            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/5 animate-in fade-in slide-in-from-top-2 duration-150 z-50">
+              {/* User Identity Info */}
+              <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                <p className="text-xs font-bold text-slate-900 truncate">{userEmail}</p>
+                <span className="inline-block mt-0.5 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+                  {userRole || 'Member'}
+                </span>
+              </div>
+
+              {/* Action Links */}
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    navigate('/settings');
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  <User className="w-4 h-4 text-slate-500" />
+                  <span>My Profile</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    navigate('/settings');
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  <span>Account Settings</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="w-4 h-4 text-slate-500" />
+                  <span>Help & Support</span>
+                </button>
+              </div>
+
+              {/* Logout Option */}
+              <div className="border-t border-slate-100 mt-1 pt-1">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-rose-600" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

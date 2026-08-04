@@ -1,3 +1,5 @@
+import { Hand, UserCheck } from 'lucide-react';
+
 export const RaiseHandList = ({ 
   raisedHands = [], 
   onDismiss, 
@@ -11,24 +13,24 @@ export const RaiseHandList = ({
   return (
     <div className="w-full flex-1 flex flex-col h-full overflow-hidden">
       
-      <div className="p-2 border-b border-slate-100 bg-slate-50 shrink-0 mb-2">
+      <div className="p-2 border-b border-slate-100 bg-slate-50/50 shrink-0 mb-2">
         <button
           onClick={() => onToggleRaiseHand(!isSelfHandRaised)}
-          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 ${
+          className={`w-full h-9 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs ${
             isSelfHandRaised
-              ? 'bg-amber-500 hover:bg-amber-600 text-white border border-amber-600'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border border-amber-600'
+              : 'bg-slate-900 hover:bg-slate-800 text-white'
           }`}
         >
-          <span className="text-sm">✋</span>
+          <Hand className="w-3.5 h-3.5" />
           <span>{isSelfHandRaised ? 'Lower My Hand' : 'Raise Hand to Ask Question'}</span>
         </button>
       </div>
 
-      <div className="w-full flex-1 overflow-y-auto space-y-2 pr-1">
+      <div className="w-full flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
         {raisedHands.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs text-center p-6 h-full">
-            <span className="text-3xl mb-2 opacity-50">✋</span>
+            <Hand className="w-8 h-8 mb-2 text-slate-300 stroke-1" />
             <p className="font-medium">No one has raised their hand yet.</p>
           </div>
         ) : (
@@ -38,19 +40,19 @@ export const RaiseHandList = ({
             return (
               <div
                 key={student.id || student.email}
-                className={`p-3 rounded-xl border flex items-center justify-between text-xs transition shadow-sm ${
+                className={`p-3 rounded-lg border flex items-center justify-between text-xs transition shadow-xs ${
                   isMe 
-                    ? 'bg-amber-100/80 border-amber-300 text-amber-900' 
-                    : 'bg-slate-50 border-slate-200 text-slate-800'
+                    ? 'bg-amber-50/80 border-amber-200 text-amber-900' 
+                    : 'bg-slate-50 border-slate-200/80 text-slate-800'
                 }`}
               >
                 <div className="min-w-0 pr-2 flex items-center gap-2">
-                  <span className="text-base">✋</span>
+                  <Hand className="w-4 h-4 text-amber-600 shrink-0" />
                   <div className="truncate">
-                    <div className="font-bold truncate flex items-center gap-1.5">
+                    <div className="font-bold text-xs truncate flex items-center gap-1.5 text-slate-900">
                       {student.name} {isMe && <span className="text-[10px] text-amber-700 font-normal">(You)</span>}
                     </div>
-                    <div className="text-[10px] text-slate-500 truncate">
+                    <div className="text-[10px] text-slate-400 truncate">
                       Raised hand to speak
                     </div>
                   </div>
@@ -59,10 +61,10 @@ export const RaiseHandList = ({
                 {currentUser?.role === 'Trainer' && (
                   <button
                     onClick={() => onDismiss(student.id || student.email)}
-                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-2.5 py-1 rounded-lg text-[10px] transition cursor-pointer shrink-0"
+                    className="bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 font-bold px-2.5 h-7 rounded-md text-[10px] transition cursor-pointer shrink-0"
                     title="Lower this participant's hand"
                   >
-                    Lower Hand
+                    Lower
                   </button>
                 )}
               </div>

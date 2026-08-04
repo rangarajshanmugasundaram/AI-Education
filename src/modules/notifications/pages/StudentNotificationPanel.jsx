@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Bell, RefreshCw, Inbox, AlertCircle } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { NotificationCard } from '../components/NotificationCard';
 import { NotificationDetailsModal } from '../components/NotificationDetailsModal';
@@ -15,51 +16,59 @@ export function StudentNotificationPanel() {
   });
 
   return (
-    <div className="p-6 space-y-6 bg-[#F8FAFC] min-h-screen">
-      {/* Header Banner */}
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-extrabold text-blue-950 flex items-center gap-2">
-            🔔 Your Notifications
+    <div className="w-full flex flex-col gap-6 max-w-[1600px] mx-auto bg-slate-50/30 min-h-screen">
+      {/* Enterprise Student Header Banner */}
+      <div className="w-full bg-white border border-slate-200/80 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <Bell className="w-5 h-5 text-slate-700" />
+            Your Notifications
             {stats.unread > 0 && (
-              <span className="bg-amber-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
+              <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {stats.unread} New
               </span>
             )}
           </h1>
-          <p className="text-xs text-slate-500 mt-1">Review live class updates, announcements, and alerts.</p>
+          <p className="text-xs text-slate-500">Review live class updates, announcements, and alerts.</p>
         </div>
 
         <button
           onClick={fetchNotifications}
-          className="px-3 py-2 bg-slate-100 hover:bg-slate-200/70 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+          className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-1.5"
         >
-          🔄 Refresh
+          <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh</span>
         </button>
       </div>
 
-      {/* Pastel Filter Tabs */}
-      <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-blue-100 w-fit shadow-sm">
+      {/* Enterprise Filter Pills */}
+      <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-slate-200/80 w-fit shadow-xs">
         <button
           onClick={() => setFilterRead('all')}
-          className={`px-4 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-            filterRead === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            filterRead === 'all' 
+              ? 'bg-slate-900 text-white font-bold shadow-xs' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
           }`}
         >
           All ({stats.total})
         </button>
         <button
           onClick={() => setFilterRead('unread')}
-          className={`px-4 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-            filterRead === 'unread' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            filterRead === 'unread' 
+              ? 'bg-slate-900 text-white font-bold shadow-xs' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
           }`}
         >
           Unread ({stats.unread})
         </button>
         <button
           onClick={() => setFilterRead('read')}
-          className={`px-4 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-            filterRead === 'read' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+            filterRead === 'read' 
+              ? 'bg-slate-900 text-white font-bold shadow-xs' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
           }`}
         >
           Read ({stats.total - stats.unread})
@@ -68,10 +77,14 @@ export function StudentNotificationPanel() {
 
       {/* Notification Cards Grid */}
       {loading ? (
-        <div className="p-12 text-center text-xs text-slate-400">Loading your inbox...</div>
+        <div className="text-center py-20 text-slate-400 text-xs font-medium flex flex-col items-center justify-center gap-2">
+          <RefreshCw className="w-5 h-5 animate-spin text-slate-500" />
+          <span>Loading your notification inbox...</span>
+        </div>
       ) : filteredList.length === 0 ? (
-        <div className="p-12 text-center text-xs text-slate-400 bg-white rounded-2xl border border-blue-100 shadow-sm">
-          📬 No notifications available.
+        <div className="text-center py-16 bg-white border border-dashed border-slate-200 rounded-xl text-slate-400 text-xs flex flex-col items-center justify-center gap-2 shadow-xs">
+          <Inbox className="w-8 h-8 text-slate-300" />
+          <span>No notifications available in this view.</span>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

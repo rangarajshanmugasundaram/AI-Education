@@ -1,3 +1,5 @@
+import { Search, RefreshCw } from 'lucide-react';
+
 export function NotificationFilters({
   searchTerm,
   setSearchTerm,
@@ -10,34 +12,37 @@ export function NotificationFilters({
   onRefresh,
 }) {
   return (
-    <div className="bg-white border border-blue-100 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-      <div className="flex flex-1 min-w-[240px] items-center gap-2 bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2">
-        <span className="text-xs text-slate-400">🔍</span>
+    <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
+      {/* Mobile Full-Width Search Input */}
+      <div className="flex w-full sm:flex-1 items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 sm:py-1.5 focus-within:bg-white focus-within:border-slate-900 transition-all">
+        <Search className="w-4 h-4 text-slate-400 shrink-0" />
         <input
           type="text"
           placeholder="Search notifications..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+          className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 outline-none"
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Select Filters - Stacked on Mobile, Inline on Desktop */}
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
-          className="bg-slate-50 border border-slate-200/80 text-slate-700 text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500 font-medium"
+          className="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 h-9 sm:h-8 rounded-lg focus:outline-none focus:border-slate-900 font-medium cursor-pointer"
         >
           <option value="">All Priorities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
+          <option value="Emergency">Emergency</option>
         </select>
 
         <select
           value={recipientType}
           onChange={(e) => setRecipientType(e.target.value)}
-          className="bg-slate-50 border border-slate-200/80 text-slate-700 text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500 font-medium"
+          className="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 h-9 sm:h-8 rounded-lg focus:outline-none focus:border-slate-900 font-medium cursor-pointer"
         >
           <option value="">All Recipients</option>
           <option value="All">All Users</option>
@@ -48,7 +53,7 @@ export function NotificationFilters({
         <select
           value={readStatus}
           onChange={(e) => setReadStatus(e.target.value)}
-          className="bg-slate-50 border border-slate-200/80 text-slate-700 text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500 font-medium"
+          className="col-span-2 sm:col-span-1 w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 h-9 sm:h-8 rounded-lg focus:outline-none focus:border-slate-900 font-medium cursor-pointer"
         >
           <option value="">All Statuses</option>
           <option value="false">Unread</option>
@@ -57,10 +62,11 @@ export function NotificationFilters({
 
         <button
           onClick={onRefresh}
-          className="p-2 bg-slate-100 hover:bg-slate-200/70 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+          className="col-span-2 sm:col-span-1 h-9 sm:h-8 w-full sm:w-8 flex items-center justify-center bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-lg transition cursor-pointer active:scale-95"
           title="Refresh List"
         >
-          🔄
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span className="sm:hidden text-xs font-semibold ml-2">Refresh</span>
         </button>
       </div>
     </div>

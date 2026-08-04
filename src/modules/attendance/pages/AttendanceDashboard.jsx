@@ -1,4 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { 
+  Users, 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  BarChart2, 
+  Download, 
+  RefreshCw, 
+  UserCheck,
+  AlertCircle
+} from 'lucide-react';
+
 import AttendanceStatsCard from '../components/AttendanceStatsCard';
 import AttendanceFilters from '../components/AttendanceFilters';
 import AttendanceTable from '../components/AttendanceTable';
@@ -9,8 +21,8 @@ import axiosInstance from '../../../services/api/axiosSetup';
 
 const MemoizedDurationValue = React.memo(({ value }) => {
   return (
-    <div style={{ minWidth: '100px' }} className="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-right contain-paint">
-      <span className="text-lg font-black text-blue-600 font-mono">
+    <div style={{ minWidth: '100px' }} className="bg-slate-50 border border-slate-200/80 px-4 py-2 rounded-lg text-right contain-paint">
+      <span className="text-base sm:text-lg font-bold text-slate-900 font-mono">
         {value}
       </span>
     </div>
@@ -204,83 +216,102 @@ export default function AttendanceDashboard() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen bg-gray-50/30 contain-intrinsic-size">
-      <div className={`p-6 max-w-7xl mx-auto transition-all duration-200 ${selectedRecord ? 'blur-sm pointer-events-none' : ''}`}>
+    <div ref={containerRef} className="relative min-h-screen bg-slate-50/30 w-full max-w-[1600px] mx-auto">
+      <div className={`p-4 sm:p-6 transition-all duration-200 ${selectedRecord ? 'blur-xs pointer-events-none' : ''}`}>
         
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Classroom Attendance</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Real-time analytical metrics compiled by the backend framework.</p>
+        {/* Enterprise Header Banner */}
+        <div className="w-full bg-white border border-slate-200/80 rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shadow-xs">
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-slate-700" />
+              Classroom Attendance
+            </h1>
+            <p className="text-xs text-slate-500">Real-time analytical metrics compiled by the backend framework.</p>
           </div>
-          <div className="flex gap-3">
+
+          <div className="flex items-center gap-2.5 flex-wrap">
             <button 
               onClick={handleExportCSV}
               disabled={loading || filteredRecords.length === 0}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+              className="h-9 px-4 bg-white hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95 disabled:cursor-not-allowed"
             >
-              📥 Export Report (.CSV)
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export CSV</span>
             </button>
             <button 
               onClick={fetchAttendance}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer"
+              className="h-9 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
             >
-              Refresh Logs
+              <RefreshCw className={`w-3.5 h-3.5 text-white ${loading ? 'animate-spin' : ''}`} />
+              <span>Refresh Logs</span>
             </button>
           </div>
         </div>
 
-        <div style={{ minHeight: '110px' }} className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+        {/* Analytical Metrics Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
           <AttendanceStatsCard 
             title={filters.session === 'all' ? "Total Logs" : "Total Students"} 
             value={reportMetrics.totalStudents} 
-            icon="👥" 
+            icon={<Users className="w-4 h-4 text-slate-600" />} 
             color="blue" 
           />
           <AttendanceStatsCard 
             title={filters.session === 'all' ? "Present Instances" : "Present"} 
             value={reportMetrics.present} 
-            icon="✅" 
+            icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} 
             color="green" 
           />
           <AttendanceStatsCard 
             title={filters.session === 'all' ? "Absent Instances" : "Absent"} 
             value={reportMetrics.absent} 
-            icon="❌" 
+            icon={<XCircle className="w-4 h-4 text-rose-600" />} 
             color="red" 
           />
           <AttendanceStatsCard 
             title={filters.session === 'all' ? "Late Instances" : "Late"} 
             value={reportMetrics.late} 
-            icon="🕒" 
+            icon={<Clock className="w-4 h-4 text-amber-600" />} 
             color="amber" 
           />
           <AttendanceStatsCard 
             title="Attendance Rate" 
             value={reportMetrics.attendanceRate} 
-            icon="📊" 
+            icon={<BarChart2 className="w-4 h-4 text-slate-600" />} 
             color="purple" 
           />
         </div>
 
-        <div style={{ minHeight: '78px' }} className={`bg-white border border-gray-100 shadow-sm rounded-2xl p-4 mb-6 flex items-center justify-between transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+        {/* Stay Duration Metric Container */}
+        <div className={`bg-white border border-slate-200/80 shadow-xs rounded-xl p-4 mb-6 flex items-center justify-between transition-opacity duration-200 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="flex items-center gap-3">
-            <span className="text-xl">⏱️</span>
+            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-slate-700">
+              <Clock className="w-4 h-4 text-slate-600" />
+            </div>
             <div>
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Average Class Stay Duration</h4>
-              <p className="text-sm font-black text-gray-800 mt-0.5">Calculated tracking weight per attendee.</p>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Average Class Stay Duration</h4>
+              <p className="text-xs font-semibold text-slate-800 mt-0.5">Calculated tracking weight per attendee.</p>
             </div>
           </div>
           
           <MemoizedDurationValue value={loading ? "-- mins" : reportMetrics.averageDuration} />
         </div>
 
+        {/* Filter Toolbar */}
         <AttendanceFilters filters={filters} setFilters={setFilters} sessions={sessions} />
 
+        {/* Logs Table / Cards Section */}
         <div style={{ minHeight: '300px' }} className="mt-6">
           {loading ? (
-            <div className="text-center py-24 text-gray-400 font-medium">Loading attendance data...</div>
+            <div className="text-center py-20 text-slate-400 font-medium text-xs flex flex-col items-center justify-center gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-slate-400" />
+              <span>Loading attendance records...</span>
+            </div>
           ) : error ? (
-            <div className="p-4 bg-red-50 text-red-700 rounded-lg shadow-sm">{error}</div>
+            <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 rounded-lg text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{error}</span>
+            </div>
           ) : (
             <>
               {!isMobile ? (
@@ -290,13 +321,15 @@ export default function AttendanceDashboard() {
                   onEditStatus={setSelectedRecord}
                 />
               ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   {filteredRecords.length > 0 ? (
                     filteredRecords.map((rec) => (
                       <AttendanceCard key={`${rec.user_id}-${rec.session_id}`} record={rec} onViewDetails={setSelectedRecord} />
                     ))
                   ) : (
-                    <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">No records found.</div>
+                    <div className="text-center py-12 text-slate-400 text-xs bg-white rounded-xl border border-dashed border-slate-200">
+                      No matching records found.
+                    </div>
                   )}
                 </div>
               )}
@@ -305,8 +338,9 @@ export default function AttendanceDashboard() {
         </div>
       </div>
 
+      {/* Details Modal */}
       {selectedRecord && (
-        <div style={{ zIndex: 1000 }} className="fixed inset-0 flex items-center justify-center p-4 bg-black/25 backdrop-blur-xs">
+        <div style={{ zIndex: 1000 }} className="fixed inset-0 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
           <AttendanceDetailsModal 
             record={selectedRecord}
             onClose={() => setSelectedRecord(null)}

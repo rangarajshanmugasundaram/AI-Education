@@ -20,9 +20,14 @@ const LiveClassroomPage = lazy(() => import('./modules/trainer/pages/LiveClassro
 const NotificationDashboard = lazy(() => import('./modules/notifications/pages/NotificationDashboard'));
 const StudentNotificationPanel = lazy(() => import('./modules/notifications/pages/StudentNotificationPanel'));
 
+// 🌟 ADMIN MODULE PAGE (Task 1)
+const AdminDashboardPage = lazy(() => import('./modules/admin/pages/AdminDashboardPage'));
+
 function AppRoutes() {
   const { userRole } = useAuth();
-  const isStudent = userRole.toLowerCase() === ROLES.STUDENT.toLowerCase();
+  const roleLower = (userRole || '').toLowerCase();
+  const isStudent = roleLower === ROLES.STUDENT.toLowerCase();
+  const isAdmin = roleLower === ROLES.ADMIN.toLowerCase();
 
   return (
     <Routes>
@@ -39,10 +44,19 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      {/* ADMIN DASHBOARD OVERVIEW ROUTE (Task 1) */}
+      <Route path="/admin/dashboard" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><AdminDashboardPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
       {/* Role-Based Navigation Routes */}
       <Route path="/" element={
         <ProtectedRoute allowedRoles={[ROLES.TRAINER, ROLES.ADMIN]}>
-          <AppLayout><TrainerDashboard /></AppLayout>
+          <AppLayout>
+            {isAdmin ? <AdminDashboardPage /> : <TrainerDashboard />}
+          </AppLayout>
         </ProtectedRoute>
       } />
 
@@ -86,7 +100,7 @@ function AppRoutes() {
       } />
 
       {/* Smart Fallback Navigation */}
-      <Route path="*" element={<Navigate to={isStudent ? "/digital-classroom" : "/"} replace />} />
+      <Route path="*" element={<Navigate to={isStudent ? "/digital-classroom" : (isAdmin ? "/admin/dashboard" : "/")} replace />} />
     </Routes>
   );
 }
@@ -94,7 +108,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium">Loading...</div>}>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium">Loading Admin Portal...</div>}>
         <AppRoutes />
       </Suspense>
     </BrowserRouter>

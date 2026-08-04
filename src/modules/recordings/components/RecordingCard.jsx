@@ -1,4 +1,4 @@
-import React from 'react';
+import { Play, Download, Trash2, Calendar, Clock, Eye } from 'lucide-react';
 
 const RecordingCard = ({ recording, onPlay, onDownload, onDelete }) => {
   const {
@@ -22,87 +22,89 @@ const RecordingCard = ({ recording, onPlay, onDownload, onDelete }) => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="group bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/20 to-purple-100/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+  const getStatusStyle = (st) => {
+    switch (st) {
+      case 'Ready':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+      case 'Processing':
+        return 'bg-amber-50 text-amber-700 border-amber-200/80';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200/80';
+    }
+  };
 
+  return (
+    <div className="group bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
       <div>
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2.5 py-1 rounded-lg shadow-sm truncate max-w-[120px]">
+        {/* Header Badges */}
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200/60 truncate max-w-[110px]">
               #{id ? id.toString().substring(0, 8) : 'REC'}
             </span>
             {status && (
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                status === 'Ready' ? 'bg-emerald-100 text-emerald-800' :
-                status === 'Processing' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
-              }`}>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${getStatusStyle(status)}`}>
                 {status}
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+          <span className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+            <Calendar className="w-3 h-3 text-slate-400" />
             {displayDate}
           </span>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-800 line-clamp-2 mb-3 group-hover:text-blue-700 transition-colors duration-200">
+        {/* Title */}
+        <h3 className="text-sm font-bold text-slate-900 line-clamp-2 mb-3 group-hover:text-slate-700 transition-colors">
           {title || 'Untitled Session'}
         </h3>
 
-        <div className="flex items-center justify-between text-xs text-gray-600 mb-6 bg-gray-50 rounded-xl px-4 py-2.5 border border-gray-100">
-          <div className="flex items-center">
-            <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="font-medium">{formatDuration(duration)}</span>
+        {/* Meta Stats */}
+        <div className="flex items-center justify-between text-xs text-slate-600 mb-5 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-mono font-medium">{formatDuration(duration)}</span>
           </div>
           {playback_count !== undefined && (
-            <span className="text-slate-400 font-mono text-[11px]">{playback_count} views</span>
+            <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1">
+              <Eye className="w-3 h-3 text-slate-400" /> {playback_count} views
+            </span>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 pt-4 border-t-2 border-gray-100">
+      {/* Action Toolbar */}
+      <div className="grid grid-cols-3 gap-1.5 pt-3 border-t border-slate-100">
         <button
           onClick={() => onPlay && onPlay(recording)}
-          className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 text-emerald-700 hover:from-emerald-100 hover:to-emerald-200 transition-all duration-200 group/btn shadow-sm cursor-pointer"
+          className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition-all text-xs font-semibold shadow-2xs cursor-pointer active:scale-95"
           title="Play Recording"
         >
-          <svg className="w-5 h-5 mb-1 group-hover/btn:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-          </svg>
-          <span className="text-[11px] font-semibold">Play</span>
+          <Play className="w-3 h-3 fill-white" />
+          <span>Play</span>
         </button>
 
         <button
           onClick={() => onDownload && onDownload(recording)}
           disabled={download_enabled === false}
-          className={`flex flex-col items-center justify-center p-2.5 rounded-xl transition-all duration-200 group/btn shadow-sm ${
+          className={`flex items-center justify-center gap-1 py-2 px-2 rounded-lg border transition-all text-xs font-semibold cursor-pointer active:scale-95 ${
             download_enabled === false 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-              : 'bg-gradient-to-br from-blue-50 to-blue-100/50 text-blue-700 hover:from-blue-100 hover:to-blue-200 cursor-pointer'
+              ? 'bg-slate-100 text-slate-400 border-slate-200/60 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 shadow-2xs'
           }`}
           title={download_enabled === false ? "Downloads Disabled" : "Download Recording"}
         >
-          <svg className="w-5 h-5 mb-1 group-hover/btn:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span className="text-[11px] font-semibold">Download</span>
+          <Download className="w-3 h-3 text-slate-500" />
+          <span>Save</span>
         </button>
 
         <button
           onClick={() => onDelete && onDelete(id)}
-          className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-br from-rose-50 to-rose-100/50 text-rose-700 hover:from-rose-100 hover:to-rose-200 transition-all duration-200 group/btn shadow-sm cursor-pointer"
+          className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-slate-200/80 hover:border-rose-200 transition-all text-xs font-semibold cursor-pointer active:scale-95"
           title="Delete Recording"
         >
-          <svg className="w-5 h-5 mb-1 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          <span className="text-[11px] font-semibold">Delete</span>
+          <Trash2 className="w-3 h-3 text-rose-600" />
+          <span>Delete</span>
         </button>
       </div>
     </div>

@@ -1,4 +1,7 @@
 export const API_ENDPOINTS = {
+  ADMIN: {
+    DASHBOARD: '/api/admin/dashboard',
+  },
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',

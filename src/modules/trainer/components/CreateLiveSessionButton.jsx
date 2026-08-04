@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import CreateSessionModal from './CreateSessionModal';
 import notificationService from '../../../services/features/notificationService';
 import classroomService from '../../../services/features/classroomService';
@@ -34,7 +35,7 @@ export const CreateLiveSessionButton = ({ onSessionCreated }) => {
     // 2. Dispatch custom window event to sync open browser tabs instantly
     window.dispatchEvent(new Event('live_session_updated'));
 
-    // 🌟 3. CALL BACKEND CLASSROOM API TO MARK SESSION LIVE IN DJANGO DB
+    // 3. Mark session live in Django DB
     try {
       if (classroomService?.startSession) {
         await classroomService.startSession(targetSessionId);
@@ -43,7 +44,7 @@ export const CreateLiveSessionButton = ({ onSessionCreated }) => {
       console.error('Failed to mark backend session live:', err);
     }
 
-    // 🌟 4. BROADCAST REAL-TIME NOTIFICATION TO STUDENTS
+    // 4. Broadcast notification to students
     try {
       await notificationService.create({
         title: `🔴 Live Session Started: ${batchName}`,
@@ -62,7 +63,7 @@ export const CreateLiveSessionButton = ({ onSessionCreated }) => {
 
     setIsModalOpen(false);
     
-    // Route trainer directly into the live classroom session
+    // Route trainer directly into the live classroom
     navigate(`/live-session/${targetSessionId}`);
   }, [navigate, onSessionCreated]);
 
@@ -71,9 +72,10 @@ export const CreateLiveSessionButton = ({ onSessionCreated }) => {
       <button
         type="button"
         onClick={handleOpenModal}
-        className="w-full sm:w-auto h-11 sm:h-10 text-center justify-center bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold px-5 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+        className="w-full sm:w-auto h-9 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 rounded-lg shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
       >
-        <span className="text-sm font-medium">+</span> Create Live Session
+        <Plus className="w-3.5 h-3.5 text-white" />
+        <span>Create Live Session</span>
       </button>
 
       <CreateSessionModal
