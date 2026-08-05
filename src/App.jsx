@@ -20,8 +20,10 @@ const LiveClassroomPage = lazy(() => import('./modules/trainer/pages/LiveClassro
 const NotificationDashboard = lazy(() => import('./modules/notifications/pages/NotificationDashboard'));
 const StudentNotificationPanel = lazy(() => import('./modules/notifications/pages/StudentNotificationPanel'));
 
-// 🌟 ADMIN MODULE PAGE (Task 1)
+// ADMIN MODULE PAGES
 const AdminDashboardPage = lazy(() => import('./modules/admin/pages/AdminDashboardPage'));
+// 🌟 TASK 2: USER MANAGEMENT PAGE
+const UserManagementPage = lazy(() => import('./modules/admin/users/pages/UserManagementPage'));
 
 function AppRoutes() {
   const { userRole } = useAuth();
@@ -44,10 +46,17 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* ADMIN DASHBOARD OVERVIEW ROUTE (Task 1) */}
+      {/* ADMIN DASHBOARD ROUTE */}
       <Route path="/admin/dashboard" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><AdminDashboardPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 🌟 TASK 2: USER MANAGEMENT ROUTE */}
+      <Route path="/admin/users" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><UserManagementPage /></AppLayout>
         </ProtectedRoute>
       } />
 
@@ -72,7 +81,6 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* RECORDINGS ACCESSIBLE TO BOTH TRAINERS AND STUDENTS */}
       <Route path="/session-recordings" element={ 
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
           <AppLayout><SessionRecordings /></AppLayout>
@@ -85,21 +93,19 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* TRAINER/ADMIN NOTIFICATION MANAGEMENT DASHBOARD */}
       <Route path="/notifications" element={
         <ProtectedRoute allowedRoles={[ROLES.TRAINER, ROLES.ADMIN]}>
           <AppLayout><NotificationDashboard /></AppLayout>
         </ProtectedRoute>
       } />
 
-      {/* STUDENT NOTIFICATION PAGE */}
       <Route path="/notifications-inbox" element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
           <AppLayout><StudentNotificationPanel /></AppLayout>
         </ProtectedRoute>
       } />
 
-      {/* Smart Fallback Navigation */}
+      {/* Fallback */}
       <Route path="*" element={<Navigate to={isStudent ? "/digital-classroom" : (isAdmin ? "/admin/dashboard" : "/")} replace />} />
     </Routes>
   );

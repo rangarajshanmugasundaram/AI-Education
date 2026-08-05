@@ -2,6 +2,13 @@ export const API_ENDPOINTS = {
   ADMIN: {
     DASHBOARD: '/api/admin/dashboard',
   },
+
+  USERS: {
+    LIST_CREATE: '/api/users/',
+    DETAIL: (id) => `/api/users/${id}/`,
+    TOGGLE_STATUS: (id) => `/api/users/${id}/toggle-status/`,
+    RESET_PASSWORD: (id) => `/api/users/${id}/reset-password/`,
+  },
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',

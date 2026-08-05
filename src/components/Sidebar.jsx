@@ -6,7 +6,8 @@ import {
   ClipboardCheck, 
   Video, 
   Sliders, 
-  Bell 
+  Bell,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants/roles';
@@ -16,14 +17,27 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   const location = useLocation();
   const { userRole } = useAuth();
 
-  const isStudent = userRole?.toLowerCase() === ROLES.STUDENT.toLowerCase();
+  const roleLower = userRole?.toLowerCase() || '';
+  const isStudent = roleLower === ROLES.STUDENT?.toLowerCase() || roleLower === 'student';
+  const isAdmin = roleLower === ROLES.ADMIN?.toLowerCase() || roleLower === 'admin';
 
   const handleNavigation = (path) => {
     navigate(path);
     if (toggleMobileMenu) toggleMobileMenu();
   };
 
-  // Professional SVG Icons mapped for Trainer / Admin
+  // 1. Navigation items for ADMIN
+  const adminNavItems = [
+    { path: '/admin/dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
+    { path: '/admin/users', label: 'User Management', icon: Users },
+    { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
+    { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
+    { path: '/session-recordings', label: 'Session Recordings', icon: Video },
+    { path: '/session-management', label: 'Session Control', icon: Sliders },
+    { path: '/notifications', label: 'Notifications', icon: Bell },
+  ];
+
+  // 2. Navigation items for TRAINER
   const trainerNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
@@ -33,20 +47,31 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/notifications', label: 'Notifications', icon: Bell },
   ];
 
-  // Professional SVG Icons mapped for Student
+  // 3. Navigation items for STUDENT
   const studentNavItems = [
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
     { path: '/notifications-inbox', label: 'Notifications', icon: Bell },
   ];
 
-  const navItems = isStudent ? studentNavItems : trainerNavItems;
+  // Select appropriate workspace items based on role
+  const navItems = isStudent 
+    ? studentNavItems 
+    : isAdmin 
+      ? adminNavItems 
+      : trainerNavItems;
+
+  const workspaceTitle = isStudent 
+    ? 'Student Workspace' 
+    : isAdmin 
+      ? 'Admin Workspace' 
+      : 'Trainer Workspace';
 
   return (
     <aside className="h-full w-64 bg-white border-r border-slate-200/80 flex flex-col">
       <nav className="flex-1 overflow-y-auto px-3.5 py-6 space-y-1">
         <div className="mb-3 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-          {isStudent ? 'Student Workspace' : 'Workspace'}
+          {workspaceTitle}
         </div>
         
         {navItems.map((item) => {
