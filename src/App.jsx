@@ -22,8 +22,11 @@ const StudentNotificationPanel = lazy(() => import('./modules/notifications/page
 
 // ADMIN MODULE PAGES
 const AdminDashboardPage = lazy(() => import('./modules/admin/pages/AdminDashboardPage'));
-// 🌟 TASK 2: USER MANAGEMENT PAGE
 const UserManagementPage = lazy(() => import('./modules/admin/users/pages/UserManagementPage'));
+
+// 🌟 TASK 3: COURSE MANAGEMENT PAGES
+const CourseManagementPage = lazy(() => import('./modules/admin/courses/pages/CourseManagementPage'));
+const CourseDetailPage = lazy(() => import('./modules/admin/courses/pages/CourseDetailPage'));
 
 function AppRoutes() {
   const { userRole } = useAuth();
@@ -46,17 +49,29 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* ADMIN DASHBOARD ROUTE */}
+      {/* ADMIN ROUTES */}
       <Route path="/admin/dashboard" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><AdminDashboardPage /></AppLayout>
         </ProtectedRoute>
       } />
 
-      {/* 🌟 TASK 2: USER MANAGEMENT ROUTE */}
       <Route path="/admin/users" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><UserManagementPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 🌟 TASK 3: COURSE MANAGEMENT ROUTES */}
+      <Route path="/admin/courses" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><CourseManagementPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/admin/courses/:courseId" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><CourseDetailPage /></AppLayout>
         </ProtectedRoute>
       } />
 

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { fetchAdminDashboardData } from '../../../services/features/adminService';
+import AdminKpiCard from '../components/AdminKpiCard';
 
 const getStoredUser = () => {
   try {
@@ -29,8 +30,6 @@ const getStoredUser = () => {
     return null;
   }
 };
-
-const formatNumber = (val) => new Intl.NumberFormat("en-IN").format(Number(val) || 0);
 
 const formatDate = (val) => {
   if (!val) return "N/A";
@@ -49,7 +48,7 @@ const getInitials = (name) => {
   return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
 };
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const currentUser = useMemo(() => getStoredUser(), []);
   const [dashboardData, setDashboardData] = useState(null);
@@ -95,7 +94,7 @@ export default function AdminDashboard() {
   const cards = [
     { title: "Total Students", value: statistics.totalStudents, icon: GraduationCap, route: "/attendance" },
     { title: "Total Trainers", value: statistics.totalTrainers, icon: Users, route: "/admin/users" },
-    { title: "Total Courses", value: statistics.totalCourses, icon: BookOpen, route: "/digital-classroom" },
+    { title: "Total Courses", value: statistics.totalCourses, icon: BookOpen, route: "/admin/courses" },
     { title: "Total Batches", value: statistics.totalBatches, icon: Layers, route: "/admin/batches" },
     { title: "Active Live Sessions", value: statistics.activeLiveSessions, icon: Radio, route: "/session-management" },
     { title: "Completed Sessions", value: statistics.completedSessions, icon: CheckCircle2, route: "/session-recordings" },
@@ -118,7 +117,7 @@ export default function AdminDashboard() {
   return (
     <div className="w-full flex flex-col gap-6 max-w-[1600px] mx-auto bg-slate-50/30 min-h-screen">
       
-      {/* Enterprise Page Banner Header */}
+      {/* Page Header */}
       <header className="w-full bg-white border border-slate-200/80 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div className="space-y-1">
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -163,26 +162,15 @@ export default function AdminDashboard() {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
-              {cards.map((c, i) => {
-                const IconComponent = c.icon;
-                return (
-                  <div
-                    key={i}
-                    onClick={() => c.route && navigate(c.route)}
-                    className={`p-4 border border-slate-200/80 rounded-xl bg-white shadow-xs flex items-center justify-between gap-4 transition-all hover:border-slate-300 ${
-                      c.route ? 'cursor-pointer' : ''
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{c.title}</span>
-                      <h3 className="text-xl font-bold font-mono text-slate-900">{formatNumber(c.value)}</h3>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 shrink-0">
-                      <IconComponent className="w-5 h-5 text-slate-600" />
-                    </div>
-                  </div>
-                );
-              })}
+              {cards.map((c, i) => (
+                <AdminKpiCard
+                  key={i}
+                  title={c.title}
+                  value={c.value}
+                  icon={c.icon}
+                  route={c.route}
+                />
+              ))}
             </div>
           </section>
 
@@ -268,7 +256,7 @@ export default function AdminDashboard() {
               </h2>
               <button 
                 onClick={() => navigate("/admin/users")}
-                className="text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors"
+                className="text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
               >
                 View All
               </button>
@@ -370,7 +358,7 @@ export default function AdminDashboard() {
 
         </main>
 
-        {/* Right Sidebar: Quick Actions & Intelligence */}
+        {/* Right Sidebar: Quick Actions */}
         <aside className="w-full lg:col-span-1 space-y-3 lg:sticky lg:top-24">
           <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-slate-400" />
@@ -380,7 +368,7 @@ export default function AdminDashboard() {
           <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-xs space-y-2.5">
             {[
               { title: "Manage Users", desc: "View students & trainers", route: "/admin/users" },
-              { title: "Create Course", desc: "Add a new course definition", route: "/admin/courses" },
+              { title: "Manage Courses", desc: "View & create course catalog", route: "/admin/courses" },
               { title: "Create Batch", desc: "Assign and group students", route: "/admin/batches" },
               { title: "Session Control", desc: "Inspect live classrooms", route: "/session-management" },
             ].map((a, idx) => (
@@ -397,7 +385,6 @@ export default function AdminDashboard() {
               </button>
             ))}
 
-            {/* AI Control Box Widget */}
             <div className="p-4 border border-slate-200 bg-slate-900 text-white rounded-lg flex flex-col items-center justify-center text-center mt-4">
               <span className="text-xl font-bold font-mono tracking-tight">System Online</span>
               <span className="text-[9px] text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-1">

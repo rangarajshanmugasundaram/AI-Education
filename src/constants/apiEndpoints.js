@@ -9,6 +9,15 @@ export const API_ENDPOINTS = {
     TOGGLE_STATUS: (id) => `/api/users/${id}/toggle-status/`,
     RESET_PASSWORD: (id) => `/api/users/${id}/reset-password/`,
   },
+
+  COURSES: {
+    LIST_CREATE: '/api/courses/',
+    DETAIL: (id) => `/api/courses/${id}/`,
+    ASSIGN_TRAINER: (id) => `/api/courses/${id}/assign-trainer/`,
+    ARCHIVE: (id) => `/api/courses/${id}/archive/`,
+    STATS: (id) => id ? `/api/courses/${id}/stats/` : '/api/courses/stats/',
+  },
+  
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',

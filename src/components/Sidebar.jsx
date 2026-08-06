@@ -7,7 +7,8 @@ import {
   Video, 
   Sliders, 
   Bell,
-  Users
+  Users,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants/roles';
@@ -30,6 +31,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   const adminNavItems = [
     { path: '/admin/dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
     { path: '/admin/users', label: 'User Management', icon: Users },
+    { path: '/admin/courses', label: 'Course Management', icon: BookOpen },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
@@ -54,7 +56,6 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/notifications-inbox', label: 'Notifications', icon: Bell },
   ];
 
-  // Select appropriate workspace items based on role
   const navItems = isStudent 
     ? studentNavItems 
     : isAdmin 
@@ -75,7 +76,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
         </div>
         
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname.startsWith(item.path) && (item.path !== '/' || location.pathname === '/');
           const IconComponent = item.icon;
 
           return (
