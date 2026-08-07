@@ -23,10 +23,12 @@ const StudentNotificationPanel = lazy(() => import('./modules/notifications/page
 // ADMIN MODULE PAGES
 const AdminDashboardPage = lazy(() => import('./modules/admin/pages/AdminDashboardPage'));
 const UserManagementPage = lazy(() => import('./modules/admin/users/pages/UserManagementPage'));
-
-// 🌟 TASK 3: COURSE MANAGEMENT PAGES
 const CourseManagementPage = lazy(() => import('./modules/admin/courses/pages/CourseManagementPage'));
 const CourseDetailPage = lazy(() => import('./modules/admin/courses/pages/CourseDetailPage'));
+
+// 🎓 TASK 4: BATCH MANAGEMENT PAGES
+const BatchManagementPage = lazy(() => import('./modules/admin/batches/pages/BatchManagementPage'));
+const BatchDetailPage = lazy(() => import('./modules/admin/batches/pages/BatchDetailPage'));
 
 function AppRoutes() {
   const { userRole } = useAuth();
@@ -62,7 +64,6 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 🌟 TASK 3: COURSE MANAGEMENT ROUTES */}
       <Route path="/admin/courses" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><CourseManagementPage /></AppLayout>
@@ -72,6 +73,19 @@ function AppRoutes() {
       <Route path="/admin/courses/:courseId" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><CourseDetailPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 🎓 TASK 4: BATCH MANAGEMENT ROUTES (EMBEDDED IN ADMIN LAYOUT) */}
+      <Route path="/admin/batches" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><BatchManagementPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/admin/batches/:batchId" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><BatchDetailPage /></AppLayout>
         </ProtectedRoute>
       } />
 

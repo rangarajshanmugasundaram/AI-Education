@@ -17,6 +17,14 @@ export const API_ENDPOINTS = {
     ARCHIVE: (id) => `/api/courses/${id}/archive/`,
     STATS: (id) => id ? `/api/courses/${id}/stats/` : '/api/courses/stats/',
   },
+
+  BATCHES: {
+    LIST_CREATE: '/api/batches/',
+    DETAIL: (id) => `/api/batches/${id}/`,
+    ALLOCATE_STUDENTS: (id) => `/api/batches/${id}/allocate-students/`,
+    ALLOCATE_TRAINER: (id) => `/api/batches/${id}/allocate-trainer/`,
+    STATS: (id) => id ? `/api/batches/${id}/stats/` : '/api/batches/stats/',
+  },
   
   AUTH: {
     LOGIN: '/api/login/',

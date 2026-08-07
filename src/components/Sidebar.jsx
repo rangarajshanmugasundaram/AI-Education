@@ -8,7 +8,8 @@ import {
   Sliders, 
   Bell,
   Users,
-  BookOpen
+  BookOpen,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants/roles';
@@ -32,6 +33,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/admin/dashboard', label: 'Admin Dashboard', icon: LayoutDashboard },
     { path: '/admin/users', label: 'User Management', icon: Users },
     { path: '/admin/courses', label: 'Course Management', icon: BookOpen },
+    { path: '/admin/batches', label: 'Batch Management', icon: Layers },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
