@@ -25,7 +25,14 @@ export const API_ENDPOINTS = {
     ALLOCATE_TRAINER: (id) => `/api/batches/${id}/allocate-trainer/`,
     STATS: (id) => id ? `/api/batches/${id}/stats/` : '/api/batches/stats/',
   },
-  
+
+  LIVE_MONITORING: {
+    SESSIONS: '/api/classroom/live-monitoring/',
+    STATS: (sessionId) => sessionId ? `/api/classroom/live-monitoring/${sessionId}/stats/` : '/api/classroom/live-monitoring/stats/',
+    ATTENDANCE_SUMMARY: (sessionId) => `/api/classroom/live-monitoring/${sessionId}/attendance-summary/`,
+    FORCE_END: (sessionId) => `/api/classroom/live-monitoring/${sessionId}/force-end/`,
+  },
+
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',

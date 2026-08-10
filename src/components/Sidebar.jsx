@@ -9,7 +9,8 @@ import {
   Bell,
   Users,
   BookOpen,
-  Layers
+  Layers,
+  Radio
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants/roles';
@@ -34,6 +35,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/admin/users', label: 'User Management', icon: Users },
     { path: '/admin/courses', label: 'Course Management', icon: BookOpen },
     { path: '/admin/batches', label: 'Batch Management', icon: Layers },
+    { path: '/admin/live-monitoring', label: 'Live Monitoring', icon: Radio },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },

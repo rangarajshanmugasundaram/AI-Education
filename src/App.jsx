@@ -25,10 +25,11 @@ const AdminDashboardPage = lazy(() => import('./modules/admin/pages/AdminDashboa
 const UserManagementPage = lazy(() => import('./modules/admin/users/pages/UserManagementPage'));
 const CourseManagementPage = lazy(() => import('./modules/admin/courses/pages/CourseManagementPage'));
 const CourseDetailPage = lazy(() => import('./modules/admin/courses/pages/CourseDetailPage'));
-
-// 🎓 TASK 4: BATCH MANAGEMENT PAGES
 const BatchManagementPage = lazy(() => import('./modules/admin/batches/pages/BatchManagementPage'));
 const BatchDetailPage = lazy(() => import('./modules/admin/batches/pages/BatchDetailPage'));
+
+// 🔴 TASK 5: ADMIN LIVE SESSION MONITORING
+const LiveSessionsMonitoringPage = lazy(() => import('./modules/admin/liveSessions/pages/LiveSessionsMonitoringPage'));
 
 function AppRoutes() {
   const { userRole } = useAuth();
@@ -76,7 +77,6 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 🎓 TASK 4: BATCH MANAGEMENT ROUTES (EMBEDDED IN ADMIN LAYOUT) */}
       <Route path="/admin/batches" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><BatchManagementPage /></AppLayout>
@@ -86,6 +86,13 @@ function AppRoutes() {
       <Route path="/admin/batches/:batchId" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><BatchDetailPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 🔴 TASK 5: ADMIN LIVE MONITORING ROUTE */}
+      <Route path="/admin/live-monitoring" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AppLayout><LiveSessionsMonitoringPage /></AppLayout>
         </ProtectedRoute>
       } />
 
@@ -143,7 +150,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium">Loading Admin Portal...</div>}>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium font-mono">Loading Admin Portal...</div>}>
         <AppRoutes />
       </Suspense>
     </BrowserRouter>
