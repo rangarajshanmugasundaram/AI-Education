@@ -33,6 +33,15 @@ export const API_ENDPOINTS = {
     FORCE_END: (sessionId) => `/api/classroom/live-monitoring/${sessionId}/force-end/`,
   },
 
+  EXAMS: {
+    LIST_CREATE: '/api/exams/',
+    DETAIL: (id) => `/api/exams/${id}/`,
+    PUBLISH_TOGGLE: (id) => `/api/exams/${id}/publish/`,
+    SUBMIT: (id) => `/api/exams/${id}/submit/`,
+    RESULTS: (id) => `/api/exams/${id}/results/`,
+    ANALYTICS: (id) => `/api/exams/${id}/analytics/`,
+  },
+
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',

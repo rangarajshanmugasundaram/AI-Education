@@ -27,9 +27,11 @@ const CourseManagementPage = lazy(() => import('./modules/admin/courses/pages/Co
 const CourseDetailPage = lazy(() => import('./modules/admin/courses/pages/CourseDetailPage'));
 const BatchManagementPage = lazy(() => import('./modules/admin/batches/pages/BatchManagementPage'));
 const BatchDetailPage = lazy(() => import('./modules/admin/batches/pages/BatchDetailPage'));
-
-// 🔴 TASK 5: ADMIN LIVE SESSION MONITORING
 const LiveSessionsMonitoringPage = lazy(() => import('./modules/admin/liveSessions/pages/LiveSessionsMonitoringPage'));
+
+// 📝 TASK 6: EXAM MANAGEMENT MODULE PAGES
+const ExamManagementPage = lazy(() => import('./modules/admin/exams/ExamManagementPage'));
+const StudentExamsPage = lazy(() => import('./modules/student/exams/StudentExamsPage'));
 
 function AppRoutes() {
   const { userRole } = useAuth();
@@ -89,10 +91,22 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 🔴 TASK 5: ADMIN LIVE MONITORING ROUTE */}
       <Route path="/admin/live-monitoring" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AppLayout><LiveSessionsMonitoringPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 📝 TASK 6: EXAM MANAGEMENT ROUTES */}
+      <Route path="/admin/exams" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.TRAINER]}>
+          <AppLayout><ExamManagementPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/student/exams" element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
+          <AppLayout><StudentExamsPage /></AppLayout>
         </ProtectedRoute>
       } />
 
@@ -150,7 +164,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium font-mono">Loading Admin Portal...</div>}>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center text-slate-500 font-medium font-mono">Loading Portal...</div>}>
         <AppRoutes />
       </Suspense>
     </BrowserRouter>
