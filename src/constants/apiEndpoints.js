@@ -42,6 +42,16 @@ export const API_ENDPOINTS = {
     ANALYTICS: (id) => `/api/exams/${id}/analytics/`,
   },
 
+  ASSIGNMENTS: {
+    LIST_CREATE: '/api/assignments/',
+    DETAIL: (id) => `/api/assignments/${id}/`,
+    STATUS_TOGGLE: (id) => `/api/assignments/${id}/status/`,
+    SUBMIT: (id) => `/api/assignments/${id}/submit/`,
+    SUBMISSIONS_ROSTER: (id) => `/api/assignments/${id}/submissions/`,
+    GRADE_SUBMISSION: (submissionId) => `/api/assignments/submissions/${submissionId}/grade/`,
+    ANALYTICS: (id) => `/api/assignments/${id}/analytics/`,
+  },
+
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',

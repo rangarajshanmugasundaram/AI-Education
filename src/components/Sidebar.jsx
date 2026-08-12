@@ -11,7 +11,8 @@ import {
   BookOpen,
   Layers,
   Radio,
-  FileText
+  FileText,
+  FileCheck
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants/roles';
@@ -37,6 +38,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/admin/courses', label: 'Course Management', icon: BookOpen },
     { path: '/admin/batches', label: 'Batch Management', icon: Layers },
     { path: '/admin/exams', label: 'Exams & Quizzes', icon: FileText },
+    { path: '/admin/assignments', label: 'Assignments', icon: FileCheck },
     { path: '/admin/live-monitoring', label: 'Live Monitoring', icon: Radio },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
@@ -49,6 +51,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   const trainerNavItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/exams', label: 'Exams & Quizzes', icon: FileText },
+    { path: '/admin/assignments', label: 'Assignments', icon: FileCheck },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
@@ -60,6 +63,7 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
   const studentNavItems = [
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/student/exams', label: 'Exams & Quizzes', icon: FileText },
+    { path: '/student/assignments', label: 'Assignments', icon: FileCheck },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
     { path: '/notifications-inbox', label: 'Notifications', icon: Bell },
   ];

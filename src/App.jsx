@@ -33,6 +33,10 @@ const LiveSessionsMonitoringPage = lazy(() => import('./modules/admin/liveSessio
 const ExamManagementPage = lazy(() => import('./modules/admin/exams/ExamManagementPage'));
 const StudentExamsPage = lazy(() => import('./modules/student/exams/StudentExamsPage'));
 
+// 📌 TASK 7: ASSIGNMENT MANAGEMENT MODULE PAGES
+const AssignmentManagementPage = lazy(() => import('./modules/admin/assignments/AssignmentManagementPage'));
+const StudentAssignmentsPage = lazy(() => import('./modules/student/assignments/StudentAssignmentsPage'));
+
 function AppRoutes() {
   const { userRole } = useAuth();
   const roleLower = (userRole || '').toLowerCase();
@@ -107,6 +111,19 @@ function AppRoutes() {
       <Route path="/student/exams" element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
           <AppLayout><StudentExamsPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 📌 TASK 7: ASSIGNMENT MANAGEMENT ROUTES */}
+      <Route path="/admin/assignments" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.TRAINER]}>
+          <AppLayout><AssignmentManagementPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/student/assignments" element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
+          <AppLayout><StudentAssignmentsPage /></AppLayout>
         </ProtectedRoute>
       } />
 
