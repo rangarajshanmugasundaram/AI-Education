@@ -29,13 +29,18 @@ const BatchManagementPage = lazy(() => import('./modules/admin/batches/pages/Bat
 const BatchDetailPage = lazy(() => import('./modules/admin/batches/pages/BatchDetailPage'));
 const LiveSessionsMonitoringPage = lazy(() => import('./modules/admin/liveSessions/pages/LiveSessionsMonitoringPage'));
 
-// 📝 TASK 6: EXAM MANAGEMENT MODULE PAGES
+// EXAM MANAGEMENT MODULE PAGES
 const ExamManagementPage = lazy(() => import('./modules/admin/exams/ExamManagementPage'));
 const StudentExamsPage = lazy(() => import('./modules/student/exams/StudentExamsPage'));
 
-// 📌 TASK 7: ASSIGNMENT MANAGEMENT MODULE PAGES
+// ASSIGNMENT MANAGEMENT MODULE PAGES
 const AssignmentManagementPage = lazy(() => import('./modules/admin/assignments/AssignmentManagementPage'));
 const StudentAssignmentsPage = lazy(() => import('./modules/student/assignments/StudentAssignmentsPage'));
+
+// 📜 TASK 8: CERTIFICATE MANAGEMENT MODULE PAGES
+const CertificateManagementPage = lazy(() => import('./modules/admin/certificates/CertificateManagementPage'));
+const StudentCertificatesPage = lazy(() => import('./modules/student/certificates/StudentCertificatesPage'));
+const VerifyCertificatePage = lazy(() => import('./pages/VerifyCertificatePage'));
 
 function AppRoutes() {
   const { userRole } = useAuth();
@@ -50,6 +55,13 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* 🛡️ Public & Sidebar-Integrated Certificate Verification Route */}
+      <Route path="/verify-certificate" element={
+        <AppLayout>
+          <VerifyCertificatePage />
+        </AppLayout>
+      } />
 
       {/* Full-Screen Meeting Room */}
       <Route path="/live-session/:sessionId" element={
@@ -101,7 +113,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 📝 TASK 6: EXAM MANAGEMENT ROUTES */}
+      {/* EXAM MANAGEMENT ROUTES */}
       <Route path="/admin/exams" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.TRAINER]}>
           <AppLayout><ExamManagementPage /></AppLayout>
@@ -114,7 +126,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* 📌 TASK 7: ASSIGNMENT MANAGEMENT ROUTES */}
+      {/* ASSIGNMENT MANAGEMENT ROUTES */}
       <Route path="/admin/assignments" element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.TRAINER]}>
           <AppLayout><AssignmentManagementPage /></AppLayout>
@@ -124,6 +136,19 @@ function AppRoutes() {
       <Route path="/student/assignments" element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
           <AppLayout><StudentAssignmentsPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* 📜 TASK 8: CERTIFICATE MANAGEMENT ROUTES */}
+      <Route path="/admin/certificates" element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.TRAINER]}>
+          <AppLayout><CertificateManagementPage /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/student/certificates" element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.TEACHER, ROLES.TRAINER, ROLES.ADMIN]}>
+          <AppLayout><StudentCertificatesPage /></AppLayout>
         </ProtectedRoute>
       } />
 

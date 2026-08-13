@@ -12,7 +12,9 @@ import {
   Layers,
   Radio,
   FileText,
-  FileCheck
+  FileCheck,
+  Award,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../constants/roles';
@@ -39,6 +41,8 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/admin/batches', label: 'Batch Management', icon: Layers },
     { path: '/admin/exams', label: 'Exams & Quizzes', icon: FileText },
     { path: '/admin/assignments', label: 'Assignments', icon: FileCheck },
+    { path: '/admin/certificates', label: 'Certificates', icon: Award },
+    { path: '/verify-certificate', label: 'Verify Certificate', icon: ShieldCheck }, // 👈 Added Here
     { path: '/admin/live-monitoring', label: 'Live Monitoring', icon: Radio },
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
@@ -52,6 +56,8 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/exams', label: 'Exams & Quizzes', icon: FileText },
     { path: '/admin/assignments', label: 'Assignments', icon: FileCheck },
+    { path: '/admin/certificates', label: 'Certificates', icon: Award },
+    { path: '/verify-certificate', label: 'Verify Certificate', icon: ShieldCheck }, // 👈 Added Here
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/attendance', label: 'Attendance', icon: ClipboardCheck },
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
@@ -64,6 +70,8 @@ const Sidebar = ({ toggleMobileMenu, isOpen }) => {
     { path: '/digital-classroom', label: 'Digital Classroom', icon: MonitorPlay },
     { path: '/student/exams', label: 'Exams & Quizzes', icon: FileText },
     { path: '/student/assignments', label: 'Assignments', icon: FileCheck },
+    { path: '/student/certificates', label: 'Certificates', icon: Award },
+    { path: '/verify-certificate', label: 'Verify Certificate', icon: ShieldCheck }, // 👈 Added Here
     { path: '/session-recordings', label: 'Session Recordings', icon: Video },
     { path: '/notifications-inbox', label: 'Notifications', icon: Bell },
   ];

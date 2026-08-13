@@ -52,6 +52,12 @@ export const API_ENDPOINTS = {
     ANALYTICS: (id) => `/api/assignments/${id}/analytics/`,
   },
 
+  CERTIFICATES: {
+    LIST_CREATE: '/api/certificates/',
+    VERIFY: '/api/certificates/verify/',
+    DOWNLOAD: (certId) => `/api/certificates/${certId}/download/`,
+  },
+
   AUTH: {
     LOGIN: '/api/login/',
     REGISTER: '/api/register/',
